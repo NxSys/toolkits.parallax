@@ -1,0 +1,23 @@
+{
+    "name": "nxsys/toolkits.parallax",
+    "description": "Parallel excution management",
+    "type": "library",
+    "require":
+    {
+        "php": ">=7.2",
+        "ext-parallel": "^1.1",
+        "nxsys/core": "^0.4.0"
+    },
+    "require-dev":
+    {
+        "codeception/codeception": "^3.0"
+    },
+    "license": "MIT",
+    "authors":
+    [
+        {
+            "name": "ONX Group",
+            "email": "onx@nxs.systems"
+        }
+    ]
+}

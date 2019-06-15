@@ -1,1 +1,16 @@
 * text=auto !eol
+/LICENSE.txt -text
+/README.txt -text
+/build.xml -text
+/codeception.yml -text
+/composer.json -text
+/sonar-project.properties -text
+src-docs/apigen.neon -text
+tests/_support/FunctionalTester.php -text
+tests/_support/Helper/Functional.php -text
+tests/_support/Helper/Unit.php -text
+tests/_support/UnitTester.php -text
+tests/_support/_generated/FunctionalTesterActions.php -text
+tests/_support/_generated/UnitTesterActions.php -text
+tests/functional.suite.yml -text
+tests/unit.suite.yml -text
