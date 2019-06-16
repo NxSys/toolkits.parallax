@@ -1,0 +1,10 @@
+*Models/Priority
+1:1 - High-Dedicated
+1:m - Normal
+N:m - Low
+
+*Vectors
+Call
+Timer
+Signal\Event
+
