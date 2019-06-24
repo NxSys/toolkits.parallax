@@ -37,7 +37,7 @@ use Pool;
  * @throws NxSys\Toolkits\Parallax\IException Well, does it?
  * @author Chris R. Feamster <cfeamster@f2developments.com>
  */
- class Supervisor extends Pool //CoreEsc\pthreads\Pool
+ class Supervisor
  {
 
  }

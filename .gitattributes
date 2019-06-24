@@ -21,5 +21,7 @@ src/Supervisor.php -text
 src/ThreadModel/Models.txt -text
 src/WatchDog.php -text
 src/test.php -text
+tests/BasicTest.php -text
+tests/NewThreadTest.php -text
 tests/_support/UnitTester.php -text
 tests/unit.suite.yml -text

@@ -1,3 +1,6 @@
+
+namespace: NxSys\Toolkits\Parallax
+
 suites:
     unit:
         path: .
@@ -5,9 +8,23 @@ suites:
 settings:
     shuffle: true
     lint: true
+    strict_xml: true
+    be_strict_about_changes_to_global_state: true
+    report_useless_tests: true
+    disallow_test_output: false
+    log_incomplete_skipped: true
+    colors: true
+
+coverage:
+    enabled: true
+    include:
+        - src/*
+    low_limit: 33
+    high_limit: 80
+    show_only_summary: false
+
 paths:
     tests: tests
     output: tests/_output
     support: tests/_support
     data: tests
-     

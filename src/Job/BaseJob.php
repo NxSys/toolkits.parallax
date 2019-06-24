@@ -33,12 +33,16 @@ use NxSys\Toolkits\Parallax;
 /** Library Dependencies **/
 use NxSys\Core\ExtensibleSystemClasses as CoreEsc;
 
+use parallel\Runtime as Thread_Runtime;
+use parallel\Channel as Thread_Channel;
+
 //....
 use SplQueue;
-use Thread;
-use Stackable;
 use Exception;
 use Throwable;
+use Closure;
+
+const DEFAULT_CHANNEL_CAPACITY = 1024;
 
 
 /**
@@ -50,14 +54,80 @@ use Throwable;
  * @author Chris R. Feamster <cfeamster@f2developments.com>
  */
 // abstract class BaseJob extends CoreEsc\pthreads\Thread implements IJob
-abstract class BaseJob extends Thread implements IJob
+class BaseJob implements IJob
 {
+	const DEFAULT_CHANNEL_CAPACITY = DEFAULT_CHANNEL_CAPACITY;
+
 	protected $aLocalConstants = [];
+	public $hThreadRuntime;
 	public function __construct()
 	{
-		$this->aInData=new SplQueue ;
-		$this->aOutData=new SplQueue ;
+
+		// $this->aInData=new CoreEsc\spl\SplQueue ;
+		// $this->aOutData=new CoreEsc\spl\SplQueue ;
+		$this->aInData=new Thread_Channel(DEFAULT_CHANNEL_CAPACITY);
+		$this->aOutData=new Thread_Channel(DEFAULT_CHANNEL_CAPACITY);
+		$this->setRunMethod();
+
 	}
+
+	public function setRunMethod(string $sMethodName = 'run')
+	{
+		if (!method_exists($this, $sMethodName))
+		{
+			throw new InvalidArgumentException($sMethodName." is a not a valid method on ".__CLASS__);
+		}
+		$this->sRunMethodName=$sMethodName;
+	}
+
+	public function setRuntime(Thread_Runtime $hRuntime = null): ?Thread_Runtime
+	{
+		return $this->hThreadRuntime=$hRuntime;
+	}
+
+	public function start(int $iLegacyOptions=0, array $aThreadArguments=[])
+	{
+		if (!$this->hThreadRuntime)
+		{
+			$this->hThreadRuntime=new Thread_Runtime(__DIR__.'\..\..\vendor\autoload.php');
+		}
+		$hScopedBooter=Closure::fromcallable([$this, 'bootThread']);
+		//$hScopedBooter = $hScopedBooter->bindTo($this);
+		$this->hThreadState=$this->hThreadRuntime->run($hScopedBooter, [new $this, [$this->aInData, $this->aOutData]]);//, [($this), $aThreadArguments]);
+		return $this->hThreadState; #"Future"
+	}
+
+	public function isRunning(): bool
+	{
+		return $this->hThreadState->cancelled() || $this->hThreadState->done();
+	}
+
+	/**
+	 * @see parallel\Future::value
+	 */
+	public function resolveJobToValue()
+	{
+		return $this->hThreadState->value();
+	}
+
+	protected function bootThread($oJob, array $aThreadArguments=[]) //: mixed
+	{
+		//require_once __DIR__.'\..\..\vendor\autoload.php';
+		// $oJob = unserialize($oJob);
+		$oJob->initConstants();
+		//channel shenanigans
+		return false?:call_user_func_array([$oJob, $oJob->sRunMethodName], $aThreadArguments);
+	}
+
+	public function run()
+	{
+		$sGoal="I am!";
+		return $sGoal;
+	}
+
+	//protected abstract function run();
+
+	//---
 
 	public function setupConstants(array $aConstants): void
 	{

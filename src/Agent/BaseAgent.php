@@ -42,7 +42,7 @@ use NxSys\Core\ExtensibleSystemClasses as CoreEsc;
  * @throws NxSys\Toolkits\Parallax\IException Well, does it?
  * @author Chris R. Feamster <cfeamster@f2developments.com>
  */
- class BaseAgent extends Worker // implements IAgent
+ class BaseAgent implements IAgent
  {
 
  }
