@@ -42,8 +42,6 @@ use Exception;
 use Throwable;
 use Closure;
 
-const DEFAULT_CHANNEL_CAPACITY = 1024;
-
 
 /**
  * Undocumented class
@@ -56,67 +54,20 @@ const DEFAULT_CHANNEL_CAPACITY = 1024;
 // abstract class BaseJob extends CoreEsc\pthreads\Thread implements IJob
 class BaseJob implements IJob
 {
-	const DEFAULT_CHANNEL_CAPACITY = DEFAULT_CHANNEL_CAPACITY;
 
-	protected $aLocalConstants = [];
-	public $hThreadRuntime;
-	public function __construct()
+	public function setInputChannel(Thread_Channel $oInData)
 	{
-
-		// $this->aInData=new CoreEsc\spl\SplQueue ;
-		// $this->aOutData=new CoreEsc\spl\SplQueue ;
-		$this->aInData=new Thread_Channel(DEFAULT_CHANNEL_CAPACITY);
-		$this->aOutData=new Thread_Channel(DEFAULT_CHANNEL_CAPACITY);
-		$this->setRunMethod();
-
+		$this->oInData = $oInData;
 	}
-
-	public function setRunMethod(string $sMethodName = 'run')
+	
+	public function setOutputChannel(Thread_Channel $oOutData)
 	{
-		if (!method_exists($this, $sMethodName))
-		{
-			throw new InvalidArgumentException($sMethodName." is a not a valid method on ".__CLASS__);
-		}
-		$this->sRunMethodName=$sMethodName;
+		$this->oOutData = $oOutData;
 	}
-
-	public function setRuntime(Thread_Runtime $hRuntime = null): ?Thread_Runtime
+	
+	public function initialize()
 	{
-		return $this->hThreadRuntime=$hRuntime;
-	}
-
-	public function start(int $iLegacyOptions=0, array $aThreadArguments=[])
-	{
-		if (!$this->hThreadRuntime)
-		{
-			$this->hThreadRuntime=new Thread_Runtime(__DIR__.'\..\..\vendor\autoload.php');
-		}
-		$hScopedBooter=Closure::fromcallable([$this, 'bootThread']);
-		//$hScopedBooter = $hScopedBooter->bindTo($this);
-		$this->hThreadState=$this->hThreadRuntime->run($hScopedBooter, [$this, [$this->aInData, $this->aOutData]]);//, [($this), $aThreadArguments]);
-		return $this->hThreadState; #"Future"
-	}
-
-	public function isRunning(): bool
-	{
-		return $this->hThreadState->cancelled() || $this->hThreadState->done();
-	}
-
-	/**
-	 * @see parallel\Future::value
-	 */
-	public function resolveJobToValue()
-	{
-		return $this->hThreadState->value();
-	}
-
-	protected function bootThread($oJob, array $aThreadArguments=[]) //: mixed
-	{
-		//require_once __DIR__.'\..\..\vendor\autoload.php';
-		// $oJob = unserialize($oJob);
-		$oJob->initConstants();
-		//channel shenanigans
-		return false?:call_user_func_array([$oJob, $oJob->sRunMethodName], $aThreadArguments);
+		
 	}
 
 	public function run()
@@ -125,157 +76,207 @@ class BaseJob implements IJob
 		return $sGoal;
 	}
 
-	//protected abstract function run();
-
-	//---
-
-	public function setupConstants(array $aConstants): void
-	{
-		foreach ($aConstants as $name)
-		{
-			$this->aLocalConstants[$name]=constant($name);
-		}
-		return;
-	}
-
-	public function initConstants(): void
-	{
-		foreach ($this->aLocalConstants as $name => $value)
-		{
-			if (!defined($name))
-			{
-				define($name, $value);
-			}
-		}
-	}
-
-	/**
-	 * Undocumented function
-	 *
-	 * @return mixed
-	 */
-	public function getReturn(): mixed
-	{
-		//eehh we really should be joined to do this
-		static $bIsJoined;
-		if(!$bIsJoined)
-		{
-			$this->join();
-			$bIsJoined=true;
-		}
-		return $this->return;
-	}
-
-	protected function setReturn($mValue)
-	{
-		return $this->return=$mValue;
-	}
-
-	public function __tostring(): string
-	{
-		return (string)$this->getReturn();
-	}
-
-	protected function pushOut($mValue)
-	{
-		//@todo enforce simple serilization
-		array_push($this->aOutData, $mValue);
-		return;
-	}
-	public function popOut()
-	{
-		return array_pop($this->aOutData);
-	}
-	protected function unshiftOut($mValue)
-	{
-		array_unshift($this->aOutData, $mValue);
-	}
-	public function shiftOut()
-	{
-		array_shift($this->aOutData);
-	}
-	#---
-	public function pushIn($mValue)
-	{
-		// printf(">>>CHECKPOINT %s::%s:%s<<<\n", __CLASS__, __FUNCTION__, __LINE__);
-		// var_dump($mValue);
-		//@todo enforce simple serilization
-		$a=$this->aInData;
-		$a->enqueue($mValue);
-		// var_dump($a)
-		$this->aInData = $a;
-		// var_dump($this->aInData)
-		return;
-	}
-	protected function popIn()
-	{
-		return array_pop($this->aInData);
-	}
-	public function unshiftIn($mValue)
-	{
-		array_unshift($this->aInData, $mValue);
-	}
-	protected function shiftIn()
-	{
-		// printf(">>>CHECKPOINT %s::%s:%s<<<\n", __CLASS__, __FUNCTION__, __LINE__);
-		// var_dump("ShiftIn");
-		// var_dump($this->aInData);
-		$aTemp=$this->aInData;
-		if (count($aTemp) == 0)
-		{
-			return null;
-		}
-		$ret = $aTemp->dequeue();
-		// var_dump($aTemp);
-		$this->aInData = $aTemp;
-		// var_dump($this->aInData);
-		return $ret;
-	}
-
-	public function hasIn()
-	{
-		return count($this->aInData) > 0;
-	}
-
-	public function hasOut()
-	{
-		return count($this->aOutData) > 0;
-	}
-
-
-	public function setException(Throwable $e)
-	{
-		// $this->oException=$e;
-	}
-
-	public function getException(): Throwable
-	{
-		return $this->oException;
-	}
-
-	public function showException(Throwable $e, $iNest=0)
-	{
-		$excode=$e->getCode();
-		$exmsg=$e->getMessage();
-
-		if(property_exists($e,'xdebug_message'))
-		{
-			echo $e->xdebug_message."\n";
-		}
-
-		$sMsg=sprintf('Exception %s: %s (C:%d) in %s on line %d'.PHP_EOL,
-					  get_class($e),$exmsg,$excode,$e->getFile(),$e->getLine());
-
-		if($iNest)
-		{
-			$sMsg=str_repeat(' ', $iNest).'\->'.$sMsg;
-		}
-		if($e->getPrevious())
-		{
-			$this->showException( $e->getPrevious(), $iNest+1);
-		}
-		$sMsg.=sprintf('Outer Stack Trace:');
-		$sMsg.=sprintf($e->getTraceAsString());
-		return $sMsg;
-	}
+	//
+	//public function setRunMethod(string $sMethodName = 'run')
+	//{
+	//	if (!method_exists($this, $sMethodName))
+	//	{
+	//		throw new InvalidArgumentException($sMethodName." is a not a valid method on ".__CLASS__);
+	//	}
+	//	$this->sRunMethodName=$sMethodName;
+	//}
+	//
+	//public function setRuntime(Thread_Runtime $hRuntime = null): ?Thread_Runtime
+	//{
+	//	return $this->hThreadRuntime=$hRuntime;
+	//}
+	//
+	//public function start(int $iLegacyOptions=0, array $aThreadArguments=[])
+	//{
+	//	if (!$this->hThreadRuntime)
+	//	{
+	//		$this->hThreadRuntime=new Thread_Runtime(__DIR__.'\..\..\vendor\autoload.php');
+	//	}
+	//	$hScopedBooter=Closure::fromcallable([$this, 'bootThread']);
+	//	//$hScopedBooter = $hScopedBooter->bindTo($this);
+	//	$this->hThreadState=$this->hThreadRuntime->run($hScopedBooter, [new $this, [$this->aInData, $this->aOutData]]);//, [($this), $aThreadArguments]);
+	//	return $this->hThreadState; #"Future"
+	//}
+	//
+	//public function isRunning(): bool
+	//{
+	//	return $this->hThreadState->cancelled() || $this->hThreadState->done();
+	//}
+	//
+	///**
+	// * @see parallel\Future::value
+	// */
+	//public function resolveJobToValue()
+	//{
+	//	return $this->hThreadState->value();
+	//}
+	//
+	//protected function bootThread($oJob, array $aThreadArguments=[]) //: mixed
+	//{
+	//	//require_once __DIR__.'\..\..\vendor\autoload.php';
+	//	// $oJob = unserialize($oJob);
+	//	$oJob->initConstants();
+	//	//channel shenanigans
+	//	return false?:call_user_func_array([$oJob, $oJob->sRunMethodName], $aThreadArguments);
+	//}
+	//
+	//
+	////protected abstract function run();
+	//
+	////---
+	//
+	//public function setupConstants(array $aConstants): void
+	//{
+	//	foreach ($aConstants as $name)
+	//	{
+	//		$this->aLocalConstants[$name]=constant($name);
+	//	}
+	//	return;
+	//}
+	//
+	//public function initConstants(): void
+	//{
+	//	foreach ($this->aLocalConstants as $name => $value)
+	//	{
+	//		if (!defined($name))
+	//		{
+	//			define($name, $value);
+	//		}
+	//	}
+	//}
+	//
+	///**
+	// * Undocumented function
+	// *
+	// * @return mixed
+	// */
+	//public function getReturn(): mixed
+	//{
+	//	//eehh we really should be joined to do this
+	//	static $bIsJoined;
+	//	if(!$bIsJoined)
+	//	{
+	//		$this->join();
+	//		$bIsJoined=true;
+	//	}
+	//	return $this->return;
+	//}
+	//
+	//protected function setReturn($mValue)
+	//{
+	//	return $this->return=$mValue;
+	//}
+	//
+	//public function __tostring(): string
+	//{
+	//	return (string)$this->getReturn();
+	//}
+	//
+	//protected function pushOut($mValue)
+	//{
+	//	//@todo enforce simple serilization
+	//	array_push($this->aOutData, $mValue);
+	//	return;
+	//}
+	//public function popOut()
+	//{
+	//	return array_pop($this->aOutData);
+	//}
+	//protected function unshiftOut($mValue)
+	//{
+	//	array_unshift($this->aOutData, $mValue);
+	//}
+	//public function shiftOut()
+	//{
+	//	array_shift($this->aOutData);
+	//}
+	//#---
+	//public function pushIn($mValue)
+	//{
+	//	// printf(">>>CHECKPOINT %s::%s:%s<<<\n", __CLASS__, __FUNCTION__, __LINE__);
+	//	// var_dump($mValue);
+	//	//@todo enforce simple serilization
+	//	$a=$this->aInData;
+	//	$a->enqueue($mValue);
+	//	// var_dump($a)
+	//	$this->aInData = $a;
+	//	// var_dump($this->aInData)
+	//	return;
+	//}
+	//protected function popIn()
+	//{
+	//	return array_pop($this->aInData);
+	//}
+	//public function unshiftIn($mValue)
+	//{
+	//	array_unshift($this->aInData, $mValue);
+	//}
+	//protected function shiftIn()
+	//{
+	//	// printf(">>>CHECKPOINT %s::%s:%s<<<\n", __CLASS__, __FUNCTION__, __LINE__);
+	//	// var_dump("ShiftIn");
+	//	// var_dump($this->aInData);
+	//	$aTemp=$this->aInData;
+	//	if (count($aTemp) == 0)
+	//	{
+	//		return null;
+	//	}
+	//	$ret = $aTemp->dequeue();
+	//	// var_dump($aTemp);
+	//	$this->aInData = $aTemp;
+	//	// var_dump($this->aInData);
+	//	return $ret;
+	//}
+	//
+	//public function hasIn()
+	//{
+	//	return count($this->aInData) > 0;
+	//}
+	//
+	//public function hasOut()
+	//{
+	//	return count($this->aOutData) > 0;
+	//}
+	//
+	//
+	//public function setException(Throwable $e)
+	//{
+	//	// $this->oException=$e;
+	//}
+	//
+	//public function getException(): Throwable
+	//{
+	//	return $this->oException;
+	//}
+	//
+	//public function showException(Throwable $e, $iNest=0)
+	//{
+	//	$excode=$e->getCode();
+	//	$exmsg=$e->getMessage();
+	//
+	//	if(property_exists($e,'xdebug_message'))
+	//	{
+	//		echo $e->xdebug_message."\n";
+	//	}
+	//
+	//	$sMsg=sprintf('Exception %s: %s (C:%d) in %s on line %d'.PHP_EOL,
+	//				  get_class($e),$exmsg,$excode,$e->getFile(),$e->getLine());
+	//
+	//	if($iNest)
+	//	{
+	//		$sMsg=str_repeat(' ', $iNest).'\->'.$sMsg;
+	//	}
+	//	if($e->getPrevious())
+	//	{
+	//		$this->showException( $e->getPrevious(), $iNest+1);
+	//	}
+	//	$sMsg.=sprintf('Outer Stack Trace:');
+	//	$sMsg.=sprintf($e->getTraceAsString());
+	//	return $sMsg;
+	//}
 }

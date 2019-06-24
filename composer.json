@@ -4,7 +4,7 @@
     "type": "library",
     "require":
     {
-        "php": ">=7.2",
+        "php": ">=7.3",
         "ext-parallel": "^1.1",
         "nxsys/core": "^0.4.0"
     },

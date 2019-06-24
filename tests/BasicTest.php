@@ -23,26 +23,26 @@ class BasicTest extends \Codeception\Test\Unit
     public function testBaseJobCreation()
     {
 		codecept_debug(sprintf(">>>CHECKPOINT %s::%s:%s<<<\n", __CLASS__, __METHOD__, __LINE__));
-		$oPlainJob=new class extends Parallax\Job\BaseJob
-		{
-			public function run()
-			{
-				$sGoal="I am!";
-				echo $sGoal;
-			}
-		};
+		$oPlainJob=new Parallax\Job\BaseJob();
 		$this->assertInstanceOf(Parallax\Job\BaseJob::class, $oPlainJob);
     }
+    
+    public function testBaseAgentCreation()
+    {
+        codecept_debug(sprintf(">>>CHECKPOINT %s::%s:%s<<<\n", __CLASS__, __METHOD__, __LINE__));
+		$oAgent=new Parallax\Agent\BaseAgent();
+		$this->assertInstanceOf(Parallax\Agent\BaseAgent::class, $oAgent);
+    }
+    
     public function testBaseJobExecution()
     {
 		codecept_debug(sprintf(">>>CHECKPOINT %s::%s:%s<<<\n", __CLASS__, __METHOD__, __LINE__));
 		$sGoalValue='I am!';
 
 		$oPlainJob=new Parallax\Job\BaseJob;
-		$hThreadFuture = $oPlainJob->start();
-		$sJobReturnValue=$oPlainJob->resolveJobToValue();
+        $oAgent = new Parallax\Agent\BaseAgent;
+		$hThreadFuture = $oAgent->run($oPlainJob);
 
-		$this->assertEquals($sGoalValue, $sJobReturnValue);
-		$this->assertEquals($hThreadFuture->value(), $sJobReturnValue);
+		$this->assertEquals($hThreadFuture->value(), $sGoalValue);
     }
 }

@@ -4,18 +4,15 @@
  * $Id$
  *
  * DESCRIPTION
- *  A Core file for Aether.sh
+ *  
  *
- * @link http://nxsys.org/spaces/aether
  * @link https://onx.zulipchat.com
  *
- * @package Aether
- * @subpackage System
- * @license http://nxsys.org/spaces/aether/wiki/license
+ * @package Parallax
  * Please see the license.txt file or the url above for full copyright and license information.
- * @copyright Copyright 2018 Nexus Systems, inc.
+ * @copyright Copyright 2019 Nexus Systems, inc.
  *
- * @author Chris R. Feamster <cfeamster@f2developments.com>
+ * @author William Graber <wgraber@nxs.systems>
  * @author $LastChangedBy$
  *
  * @version $Revision$
@@ -29,20 +26,51 @@ use NxSys\Toolkits\Parallax;
 use NxSys\Toolkits\Parallax\Job\BaseJob;
 
 /** Framework Dependencies **/
-use Worker;
+use parallel\Runtime as Thread_Runtime;
+use parallel\Channel as Thread_Channel;
+
+//....
+use SplQueue;
+use Exception;
+use Throwable;
+use Closure;
 
 /** Library Dependencies **/
 use NxSys\Core\ExtensibleSystemClasses as CoreEsc;
 
-/**
- * Undocumented class
- *
- * Why does this exist? What does this do?
- *
- * @throws NxSys\Toolkits\Parallax\IException Well, does it?
- * @author Chris R. Feamster <cfeamster@f2developments.com>
- */
- class BaseAgent implements IAgent
- {
+const DEFAULT_CHANNEL_CAPACITY = 1024;
 
- }
+/**
+ * 
+ */
+class BaseAgent 
+{
+	protected $hThreadRuntime = False;
+	
+	public function __construct()
+	{
+		if (!$this->hThreadRuntime)
+		{
+			$this->hThreadRuntime=new Thread_Runtime(__DIR__.'\..\..\vendor\autoload.php');
+		}
+		
+		$this->oInData=new Thread_Channel(DEFAULT_CHANNEL_CAPACITY);
+		$this->oOutData=new Thread_Channel(DEFAULT_CHANNEL_CAPACITY);
+		
+		$this->cExecute = function (BaseJob $oJob, Thread_Channel $oInData, Thread_Channel $oOutData, $aArguments = [])
+		{
+			$oJob->setInputChannel($oInData);
+			$oJob->setOutputChannel($oOutData);
+			$oJob->initialize();
+			return $oJob->run($aArguments);
+		};
+	}
+		
+	
+	public function run(BaseJob $oJob, array $aArguments = [])
+	{
+		$oResult = $this->hThreadRuntime->run($this->cExecute, [$oJob, $this->oInData, $this->oOutData, $aArguments]);
+		return $oResult;
+	}
+	
+}
