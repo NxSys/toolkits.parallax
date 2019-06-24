@@ -52,7 +52,7 @@ use Closure;
  * @author Chris R. Feamster <cfeamster@f2developments.com>
  */
 // abstract class BaseJob extends CoreEsc\pthreads\Thread implements IJob
-class BaseJob implements IJob
+class BaseJob //implements IJob
 {
 
 	public function setInputChannel(Thread_Channel $oInData)
