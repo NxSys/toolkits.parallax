@@ -93,7 +93,7 @@ class BaseJob implements IJob
 		}
 		$hScopedBooter=Closure::fromcallable([$this, 'bootThread']);
 		//$hScopedBooter = $hScopedBooter->bindTo($this);
-		$this->hThreadState=$this->hThreadRuntime->run($hScopedBooter, [new $this, [$this->aInData, $this->aOutData]]);//, [($this), $aThreadArguments]);
+		$this->hThreadState=$this->hThreadRuntime->run($hScopedBooter, [$this, [$this->aInData, $this->aOutData]]);//, [($this), $aThreadArguments]);
 		return $this->hThreadState; #"Future"
 	}
 
