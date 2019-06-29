@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- ===========================================================================
+# build.xml
+# $Id: build.xml 129 2018-09-29 02:17:14Z wgraber $
+#
+# Description:
+#
+# Meta Tags:
+# [@package WACC
+# @subpackage Meta
+# @author Chris R. Feamster <cfeamster@f2developments.com>
+# @author $LastChangedBy: wgraber $
+#
+# @version $Revision: 129 $
+# @copyright (c) 2019 Nexus Systems, Inc. All rights reserved.]
+#
+============================================================================ -->
+<project name="Parallax" default="dist">
+
+    <!-- ============================================  -->
+    <!-- Target: prepare                               -->
+    <!-- ============================================  -->
+    <target name="prepare">
+        <echo msg="Making directory ./build" />
+        <mkdir dir="./build" />
+        <echo msg="Making directory ./build/docs" />
+        <mkdir dir="./build/docs" />
+    </target>
+
+    <!-- ============================================  -->
+    <!-- Target: build                                 -->
+    <!-- ============================================  -->
+    <target name="build" depends="prepare">
+        <echo msg="Copying files to build directory..." />
+
+        <!-- <echo msg="Copying ./about.php to ./build directory..." />
+        <copy file="./about.php" tofile="./build/about.php" />
+
+        <echo msg="Copying ./browsers.php to ./build directory..." />
+        <copy file="./browsers.php" tofile="./build/browsers.php" />
+
+        <echo msg="Copying ./contact.php to ./build directory..." />
+        <copy file="./contact.php" tofile="./build/contact.php" /> -->
+    </target>
+
+    <!-- ============================================  -->
+    <!-- Target: build                                 -->
+    <!-- ============================================  -->
+    <target name="test">
+		<exec executable="codecept" passthru="true">
+			<arg line="run --coverage --coverage-xml --coverage-html --html --xml --tap"/>
+		</exec>
+	</target>
+
+    <!-- ============================================  -->
+    <!-- (DEFAULT)  Target: dist                       -->
+    <!-- ============================================  -->
+    <target name="dist" depends="build">
+        <echo msg="Creating archive..." />
+
+        <tar destfile="./build/build.tar.gz" compression="gzip">
+            <fileset dir="./build">
+                <include name="*" />
+            </fileset>
+        </tar>
+
+        <echo msg="Files copied and compressed in build directory OK!" />
+    </target>
+</project>

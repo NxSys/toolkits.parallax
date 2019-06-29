@@ -1,0 +1,15 @@
+{
+	"algorithm":	"SHA512",
+	"banner-file":	"banner.txt",
+	"blacklist":	["libs", "etc"],
+	"compression":	"GZ",
+	"directories":	["src", "vendor"],
+	"directories-bin": ["res"],
+	"intercept": true,
+	"files": 
+	[
+		"composer.json"
+	],
+
+	"main": false
+}

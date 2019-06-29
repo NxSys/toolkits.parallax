@@ -1,6 +1,8 @@
 * text=auto !eol
 /LICENSE.txt -text
 /README.txt -text
+/banner.txt -text
+/box.json -text
 /build.xml -text
 /codeception.yml -text
 /composer.json -text
@@ -18,10 +20,14 @@ src/Job/Fiber.php -text
 src/Job/IJob.php -text
 src/Job/Timer.php -text
 src/Supervisor.php -text
+src/ThreadBooter.php -text
 src/ThreadModel/Models.txt -text
 src/WatchDog.php -text
 src/test.php -text
 tests/BasicTest.php -text
+tests/EnvironmentTest.php -text
 tests/NewThreadTest.php -text
+tests/ThreadBootloaderTest.php -text
+tests/_support/SampleJob.php -text
 tests/_support/UnitTester.php -text
 tests/unit.suite.yml -text

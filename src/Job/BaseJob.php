@@ -52,22 +52,22 @@ use Closure;
  * @author Chris R. Feamster <cfeamster@f2developments.com>
  */
 // abstract class BaseJob extends CoreEsc\pthreads\Thread implements IJob
-class BaseJob //implements IJob
+class BaseJob implements IJob
 {
 
 	public function setInputChannel(Thread_Channel $oInData)
 	{
 		$this->oInData = $oInData;
 	}
-	
+
 	public function setOutputChannel(Thread_Channel $oOutData)
 	{
 		$this->oOutData = $oOutData;
 	}
-	
+
 	public function initialize()
 	{
-		
+
 	}
 
 	public function run()

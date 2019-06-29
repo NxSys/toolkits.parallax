@@ -45,6 +45,6 @@ use NxSys\Core\ExtensibleSystemClasses as CoreEsc;
  interface IJob
  {
 	//protected function run();
-	function start();
-	function isRunning();
+	// function start();
+	// function isRunning();
  }
