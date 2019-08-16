@@ -10,8 +10,16 @@ use NxSys\Toolkits\Parallax\Job\BaseJob;
 class SampleJob extends BaseJob
 {
 	const OUTPUT="the correct output";
+	public $v=1;
+
+	public function setVal($v)
+	{
+		return $this->v=$v;
+	}
+
 	public function run()
 	{
-		return self::OUTPUT;
+		//do work!
+		return $this->v;
 	}
 }

@@ -1,3 +1,4 @@
+/.scannerwork
 /composer.lock
 tests/_output/*
 /vendor

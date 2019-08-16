@@ -32,19 +32,11 @@
     <!-- ============================================  -->
     <target name="build" depends="prepare">
         <echo msg="Copying files to build directory..." />
-
-        <!-- <echo msg="Copying ./about.php to ./build directory..." />
-        <copy file="./about.php" tofile="./build/about.php" />
-
-        <echo msg="Copying ./browsers.php to ./build directory..." />
-        <copy file="./browsers.php" tofile="./build/browsers.php" />
-
-        <echo msg="Copying ./contact.php to ./build directory..." />
-        <copy file="./contact.php" tofile="./build/contact.php" /> -->
+		<!-- tsc, scss, box, etc -->
     </target>
 
     <!-- ============================================  -->
-    <!-- Target: build                                 -->
+    <!-- Target: test                                 -->
     <!-- ============================================  -->
     <target name="test">
 		<exec executable="codecept" passthru="true">
@@ -58,12 +50,13 @@
     <target name="dist" depends="build">
         <echo msg="Creating archive..." />
 
-        <tar destfile="./build/build.tar.gz" compression="gzip">
+        <tar destfile="./build/build.tgz" compression="gzip">
             <fileset dir="./build">
                 <include name="*" />
             </fileset>
         </tar>
 
         <echo msg="Files copied and compressed in build directory OK!" />
+		<!-- upload to....   -->
     </target>
 </project>

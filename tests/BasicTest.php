@@ -30,16 +30,17 @@ class BasicTest extends \Codeception\Test\Unit
     public function testBaseAgentCreation()
     {
         codecept_debug(sprintf(">>>CHECKPOINT %s::%s:%s<<<\n", __CLASS__, __METHOD__, __LINE__));
-		$oAgent=new Parallax\Agent\BaseAgent();
-		$this->assertInstanceOf(Parallax\Agent\BaseAgent::class, $oAgent);
+		  $oAgent=new Parallax\Agent\BaseAgent();
+      $this->assertInstanceOf(Parallax\Agent\BaseAgent::class, $oAgent);
+      codecept_debug(sprintf(">>>CHECKPOINT %s::%s:%s<<<\n", __CLASS__, __METHOD__, __LINE__));
     }
 
     public function testBaseJobExecution()
     {
-		codecept_debug(sprintf(">>>CHECKPOINT %s::%s:%s<<<\n", __CLASS__, __METHOD__, __LINE__));
-		$sGoalValue=SampleJob::OUTPUT;
-		$oPlainJob=new SampleJob;
-        $oAgent = new Parallax\Agent\BaseAgent;
+    codecept_debug(sprintf(">>>CHECKPOINT %s::%s:%s<<<\n", __CLASS__, __METHOD__, __LINE__));
+    $sGoalValue = "I am!";
+		$oPlainJob=new Parallax\Job\BaseJob;
+    $oAgent = new Parallax\Agent\BaseAgent;
 		$hThreadFuture = $oAgent->run($oPlainJob);
 		$this->assertEquals($hThreadFuture->value(), $sGoalValue);
     }

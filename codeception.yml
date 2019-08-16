@@ -3,9 +3,11 @@ namespace: NxSys\Toolkits\Parallax
 
 suites:
     unit:
+        # only unit tests here
         path: .
 
 settings:
+    bootstrap: ..\vendor\autoload.php
     shuffle: true
     lint: true
     strict_xml: true

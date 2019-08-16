@@ -1,0 +1,38 @@
+version: 0.4.{build}
+init:
+- cmd: >-
+    rem powershell iex ((new-object net.webclient).DownloadString('https://raw.githubusercontent.com/appveyor/ci/master/scripts/enable-rdp.ps1'))
+
+    SET PATH=%PHPCI_PHP%;%PHPCI_COMPOSER%;%PATH%
+
+    SET COMPOSER_HOME=%PHPCI_COMPOSER%\home
+
+    SET COMPOSER_CACHE_DIR=%PHPCI_COMPOSER%\cache
+
+    SET COMPOSER_NO_INTERACTION=1
+
+    SET PHP=0
+
+    SET ANSICON=121x90 (121x90)
+environment:
+  PHPCI_CHOCO_VERSION: 7.3.1
+  PHPCI_CACHE: C:\tools\phpci
+  PHPCI_PHP: C:\tools\phpci\php
+  PHPCI_COMPOSER: C:\tools\phpci\composer
+install:
+- cmd: "cinst javaruntime -y\ncurl -O https://binaries.sonarsource.com/Distribution/sonar-scanner-cli/sonar-scanner-cli-4.0.0.1744.zip\n7z e -y sonar-scanner-cli-4.0.0.1744.zip\nset path=%path%;%cd%\\sonar-scanner-4.0.0.1744\\bin\nsonar-scanner --version\n\nrem ===\n\nIF EXIST %PHPCI_CACHE% (SET PHP=1)\n\nIF %PHP%==0 cinst php -i -y --version %PHPCI_CHOCO_VERSION%  --params \"/InstallDir:%PHPCI_PHP% /ThreadSafe\"\nphp -v\nphp --ini\n\nIF %PHP%==0 cinst composer -i -y --ia \"/DEV=%PHPCI_COMPOSER%\"\n\nIF %PHP%==0 (composer --version) ELSE (composer self-update)\n\npushd %PHPCI_PHP%\ncd\ncd ext\ncurl -O https://xdebug.org/files/php_xdebug-2.7.2-7.3-vc15-x86_64.dll\ncurl -O https://windows.php.net/downloads/pecl/releases/parallel/1.1.2/php_parallel-1.1.2-7.3-ts-vc15-x64.zip\n7z e php_parallel-1.1.2-7.3-ts-vc15-x64.zip -y -bd\ncopy pthreadVC2.dll ..\n\ncd ..\necho extension=php_curl.dll >> php.ini\necho extension=php_parallel.dll >> php.ini\necho zend_extension=php_xdebug-2.7.2-7.3-vc15-x86_64.dll >> php.ini\npowershell cat php.ini -Tail 5\n\nphp -v\nphp --ri parallel\nphp --ri xdebug \n\n\ncd %APPVEYOR_BUILD_FOLDER%\nset path=%path%;%cd%\\vendor\\bin\ncomposer require phing/phing --no-update --no-interaction\ncomposer install --prefer-dist --no-progress  --no-interaction"
+test_script:
+- cmd: >-
+    phing test
+
+    powershell (New-Object 'System.Net.WebClient').UploadFile('https://ci.appveyor.com/api/testresults/junit/' + '%APPVEYOR_JOB_ID%', (Resolve-Path '.\tests\_output\report.xml'))
+
+
+    sonar-scanner -D"sonar.projectKey=nxsys_toolkits.parallax" -D"sonar.organization=nxsys" -D"project.settings=%cd%\sonar-project.properties" -D"sonar.projectVersion=%APPVEYOR_BUILD_VERSION%" -D"sonar.projectBaseDir=%APPVEYOR_BUILD_FOLDER%" -D"sonar.buildString=%APPVEYOR_BUILD_ID%" -D"sonar.host.url=https://sonarcloud.io" -D"sonar.login=b28706bc660ef44e28f99592a3e3284a6723bf8c"
+artifacts:
+- path: .\tests\_output
+  name: tests
+after_deploy:
+- ps: $blockRdp = $true; iex ((new-object net.webclient).DownloadString('https://raw.githubusercontent.com/appveyor/ci/master/scripts/enable-rdp.ps1'))
+on_failure:
+- cmd: $blockRdp = $true; iex ((new-object net.webclient).DownloadString('https://raw.githubusercontent.com/appveyor/ci/master/scripts/enable-rdp.ps1'))
