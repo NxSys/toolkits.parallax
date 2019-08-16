@@ -26,12 +26,12 @@ namespace NxSys\Toolkits\Parallax\Job;
 
 /** Local Project Dependencies **/
 use NxSys\Toolkits\Parallax;
-
+use NxSys\Toolkits\Parallax\Job\BaseJob;
 /** Framework Dependencies **/
 
 
 /** Library Dependencies **/
-use NxSys\Core\ExtensibleSystemClasses as CoreEsc;
+//use NxSys\Core\ExtensibleSystemClasses as CoreEsc;
 
 
 /**
@@ -49,10 +49,9 @@ abstract class Fiber extends BaseJob
 
 	final public function run()
 	{
-		// echo "Fiber start";
-		$this->initConstants();
+		error_log(sprintf(">>>CHECKPOINT %s::%s:%s<<<\n", __CLASS__, __FUNCTION__, __LINE__).PHP_EOL, 4);
+		//$this->initConstants();
 		$this->onStartup();
-		// var_dump($this->isRunning());
 		do
 		{
 			if(!$this->isSleep())
@@ -64,15 +63,13 @@ abstract class Fiber extends BaseJob
 				}
 				catch (\Throwable $e)
 				{
-					print $this->showException($e);
-					$this->setException($e);
+
 				}
 			}
 			$bContinue=!$this->isHalted();
 		}
 		while(true==$bContinue);
-		$this->onShutdown();
-		return;
+		//$this->onShutdown();
 	}
 
 	public function onStartup() {}

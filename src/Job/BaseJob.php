@@ -72,7 +72,9 @@ class BaseJob implements IJob
 
 	public function run()
 	{
+		error_log(sprintf(">>>CHECKPOINT %s::%s:%s<<<\n", __CLASS__, __FUNCTION__, __LINE__).PHP_EOL, 4);
 		$sGoal="I am!";
+		var_dump($sGoal);
 		return $sGoal;
 	}
 
@@ -219,6 +221,8 @@ class BaseJob implements IJob
 	//protected function shiftIn()
 	//{
 	//	// printf(">>>CHECKPOINT %s::%s:%s<<<\n", __CLASS__, __FUNCTION__, __LINE__);
+
+
 	//	// var_dump("ShiftIn");
 	//	// var_dump($this->aInData);
 	//	$aTemp=$this->aInData;
@@ -253,30 +257,31 @@ class BaseJob implements IJob
 	//{
 	//	return $this->oException;
 	//}
-	//
-	//public function showException(Throwable $e, $iNest=0)
-	//{
-	//	$excode=$e->getCode();
-	//	$exmsg=$e->getMessage();
-	//
-	//	if(property_exists($e,'xdebug_message'))
-	//	{
-	//		echo $e->xdebug_message."\n";
-	//	}
-	//
-	//	$sMsg=sprintf('Exception %s: %s (C:%d) in %s on line %d'.PHP_EOL,
-	//				  get_class($e),$exmsg,$excode,$e->getFile(),$e->getLine());
-	//
-	//	if($iNest)
-	//	{
-	//		$sMsg=str_repeat(' ', $iNest).'\->'.$sMsg;
-	//	}
-	//	if($e->getPrevious())
-	//	{
-	//		$this->showException( $e->getPrevious(), $iNest+1);
-	//	}
-	//	$sMsg.=sprintf('Outer Stack Trace:');
-	//	$sMsg.=sprintf($e->getTraceAsString());
-	//	return $sMsg;
-	//}
+
+	public function showException(Throwable $e, $iNest=0)
+    {
+        $excode=$e->getCode();
+        $exmsg=$e->getMessage();
+
+        if(property_exists($e,'xdebug_message'))
+        {
+            echo $e->xdebug_message."\n";
+        }
+
+        $sMsg=sprintf('Exception %s: %s (C:%d) in %s on line %d'.PHP_EOL,
+                      get_class($e),$exmsg,$excode,$e->getFile(),$e->getLine());
+
+        if($iNest)
+        {
+            $sMsg=str_repeat(' ', $iNest).'\->'.$sMsg;
+        }
+        if($e->getPrevious())
+        {
+            $this->showException( $e->getPrevious(), $iNest+1);
+        }
+        $sMsg.=sprintf('Outer Stack Trace:');
+        $sMsg.=sprintf($e->getTraceAsString());
+        return $sMsg;
+    }
+
 }

@@ -4,7 +4,7 @@
  * $Id$
  *
  * DESCRIPTION
- *  
+ *
  *
  * @link https://onx.zulipchat.com
  *
@@ -24,6 +24,7 @@ namespace NxSys\Toolkits\Parallax\Agent;
 /** Local Project Dependencies **/
 use NxSys\Toolkits\Parallax;
 use NxSys\Toolkits\Parallax\Job\BaseJob;
+use NxSys\Toolkits\Parallax\Job\Fiber;
 
 /** Framework Dependencies **/
 use parallel\Runtime as Thread_Runtime;
@@ -39,38 +40,56 @@ use Closure;
 use NxSys\Core\ExtensibleSystemClasses as CoreEsc;
 
 const DEFAULT_CHANNEL_CAPACITY = 1024;
+const THREAD_ENVIRONMENT_STUB =
+	__DIR__.DIRECTORY_SEPARATOR
+	.'..'.DIRECTORY_SEPARATOR
+	.'ThreadBooter.php';
 
 /**
- * 
+ *
  */
-class BaseAgent 
+class BaseAgent
 {
 	protected $hThreadRuntime = False;
-	
+
 	public function __construct()
 	{
+		(printf(">>>CHECKPOINT %s::%s:%s<<<\n", __CLASS__, __FUNCTION__, __LINE__));
 		if (!$this->hThreadRuntime)
 		{
-			$this->hThreadRuntime=new Thread_Runtime(__DIR__.'\..\..\vendor\autoload.php');
+			$this->hThreadRuntime=new Thread_Runtime(THREAD_ENVIRONMENT_STUB);
 		}
-		
 		$this->oInData=new Thread_Channel(DEFAULT_CHANNEL_CAPACITY);
 		$this->oOutData=new Thread_Channel(DEFAULT_CHANNEL_CAPACITY);
-		
-		$this->cExecute = function (BaseJob $oJob, Thread_Channel $oInData, Thread_Channel $oOutData, $aArguments = [])
+		(printf(">>>CHECKPOINT %s::%s:%s<<<\n", __CLASS__, __FUNCTION__, __LINE__));
+		$this->cExecute = function ($oJob, Thread_Channel $oInData, Thread_Channel $oOutData, $aArguments = [])
 		{
+			var_dump($oJob);
+			//die(sprintf(">>>CHECKPOINT %s::%s:%s<<<\n", __CLASS__, __FUNCTION__, __LINE__));
+			error_log(sprintf(">>>CHECKPOINT %s::%s:%s<<<\n", __CLASS__, __FUNCTION__, __LINE__).PHP_EOL, 4);
+			//var_dump(sprintf(">>>CHECKPOINT %s::%s:%s<<<\n", __CLASS__, __FUNCTION__, __LINE__).PHP_EOL);
 			$oJob->setInputChannel($oInData);
 			$oJob->setOutputChannel($oOutData);
 			$oJob->initialize();
-			return $oJob->run($aArguments);
+			try
+			{
+				return $oJob->run($aArguments);
+			}
+			catch (\Throwable $e)
+			{
+				var_dump($e);
+			}
 		};
 	}
-		
-	
-	public function run(BaseJob $oJob, array $aArguments = [])
+
+
+	public function start(BaseJob $oJob, array $aArguments = [])
 	{
+		var_dump($oJob);
+		(printf(">>>CHECKPOINT %s::%s:%s<<<\n", __CLASS__, __METHOD__, __LINE__));
 		$oResult = $this->hThreadRuntime->run($this->cExecute, [$oJob, $this->oInData, $this->oOutData, $aArguments]);
+		(printf(">>>CHECKPOINT %s::%s:%s<<<\n", __CLASS__, __METHOD__, __LINE__));
 		return $oResult;
 	}
-	
+
 }

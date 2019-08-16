@@ -11,6 +11,7 @@
 src-docs/apigen.neon -text
 src/Agent/BaseAgent.php -text
 src/Agent/IAgent.php -text
+src/Channel.php -text
 src/IAgentModel.php -text
 src/IException.php -text
 src/Job/Async.php -text
