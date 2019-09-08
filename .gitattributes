@@ -11,7 +11,15 @@
 src-docs/apigen.neon -text
 src/Agent/BaseAgent.php -text
 src/Agent/IAgent.php -text
+src/Agent/ParallelAgent.php -text
+src/Agent/ProcessAgent.php -text
 src/Channel.php -text
+src/Channel/BaseChannel.php -text
+src/Channel/IChannel.php -text
+src/Channel/InMemoryChannel.php -text
+src/Channel/ParallelChannel.php -text
+src/Channel/StdPipeChannel.php -text
+src/Channel/XMLSocketChannel.php -text
 src/IAgentModel.php -text
 src/IException.php -text
 src/Job/Async.php -text

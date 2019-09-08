@@ -41,7 +41,11 @@ use NxSys\Core\ExtensibleSystemClasses as CoreEsc;
  * @throws NxSys\Toolkits\Parallax\IException Well, does it?
  * @author Chris R. Feamster <cfeamster@f2developments.com>
  */
- interface IAgent
- {
-
- }
+interface IAgent
+{
+	/**
+	 * @api
+	 */
+	function run(Parallax\Job\BaseJob $oJob, array $aArguments = []);
+	function setChannelManager(Parallax\Channel\IChannel $oChannel);
+}

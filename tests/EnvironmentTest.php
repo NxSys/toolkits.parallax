@@ -1,4 +1,6 @@
-<?php namespace NxSys\Toolkits\Parallax;
+<?php 
+
+namespace NxSys\Toolkits\Parallax;
 
 use ReflectionExtension;
 

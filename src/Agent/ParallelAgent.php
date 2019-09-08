@@ -40,7 +40,6 @@ use Closure;
 use NxSys\Core\ExtensibleSystemClasses as CoreEsc;
 
 const DEFAULT_CHANNEL_CAPACITY = 1024;
-
 const THREAD_ENVIRONMENT_STUB =
 	__DIR__.DIRECTORY_SEPARATOR
 	.'..'.DIRECTORY_SEPARATOR
@@ -49,7 +48,7 @@ const THREAD_ENVIRONMENT_STUB =
 /**
  *
  */
-abstract class BaseAgent
+class ParallelAgent extends BaseAgent
 {
 	protected $hThreadRuntime = False;
 
@@ -83,12 +82,14 @@ abstract class BaseAgent
 		};
 	}
 
-	public function setChannelManager(Parallax\Channel\IChannel $oChannel)
+
+	public function run(BaseJob $oJob, array $aArguments = [])
 	{
+		var_dump($oJob);
+		(printf(">>>CHECKPOINT %s::%s:%s<<<\n", __CLASS__, __METHOD__, __LINE__));
+		$oResult = $this->hThreadRuntime->run($this->cExecute, [$oJob, $this->oInData, $this->oOutData, $aArguments]);
+		(printf(">>>CHECKPOINT %s::%s:%s<<<\n", __CLASS__, __METHOD__, __LINE__));
+		return $oResult;
+	}
 
-	}	
-
-
-
-	abstract public function run(/* BaseJob */ $oJob, array $aArguments = []);
 }

@@ -31,7 +31,7 @@ spl_autoload_register(function($class) {
     }
 );
 
-require_once 'C:\dev\projects\onx\aether\applications.aether-rce\vendor\autoload.php';
+// require_once 'C:\dev\projects\onx\aether\applications.aether-rce\vendor\autoload.php';
 
 //codecept_debug(sprintf(">>>CHECKPOINT %s::%s:%s<<<\n", __CLASS__, __FUNCTION__, __LINE__));
 //debug_print_backtrace();
