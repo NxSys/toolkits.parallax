@@ -16,7 +16,9 @@ src/Agent/ProcessAgent.php -text
 src/Channel.php -text
 src/Channel/BaseChannel.php -text
 src/Channel/IChannel.php -text
+src/Channel/IException.php -text
 src/Channel/InMemoryChannel.php -text
+src/Channel/Message.php -text
 src/Channel/ParallelChannel.php -text
 src/Channel/StdPipeChannel.php -text
 src/Channel/XMLSocketChannel.php -text
@@ -29,6 +31,7 @@ src/Job/Defer.php -text
 src/Job/Fiber.php -text
 src/Job/IJob.php -text
 src/Job/Timer.php -text
+src/SampleJob.php -text
 src/Supervisor.php -text
 src/ThreadBooter.php -text
 src/ThreadModel/Models.txt -text
@@ -36,6 +39,7 @@ src/WatchDog.php -text
 tests/ApiConformityTest.php -text
 tests/BasicTest.php -text
 tests/EnvironmentTest.php -text
+tests/NewProcessTest.php -text
 tests/NewThreadTest.php -text
 tests/ThreadBootloaderTest.php -text
 tests/_support/SampleJob.php -text
