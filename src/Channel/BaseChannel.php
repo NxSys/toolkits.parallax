@@ -35,18 +35,13 @@ use NxSys\Toolkits\Parallax;
 
 /** Library Dependencies **/
 use NxSys\Core\ExtensibleSystemClasses as CoreEsc;
+use ParallaxChannel_InvalidParameterException;
 use RuntimeException;
 
 abstract class BaseChannel implements IChannel
 {
 	/** @var string $sId Global id for channel */
 	public $sId = null;
-
-	/** @var string $sEndpointId Id of this channel enpoint. Helps in fannout use cases */
-	protected $sEndpointId = null;
-
-	/** @var array $aSeenEndpoints List of epids that have been observed */
-	protected $aSeenEndpoints = [];
 
 	/** @var int $iChannelMode MODE_HOST */
 	protected $iChannelMode = null;
@@ -66,7 +61,7 @@ abstract class BaseChannel implements IChannel
 		else
 		{
 			//perm ids
-			throw new InvalidArgumentException;
+			throw new ParallaxChannel_InvalidParameterException;
 		}
 		return;
 	}
@@ -78,78 +73,55 @@ abstract class BaseChannel implements IChannel
 	{
 		if (!$this->sId)
 		{
-			throw new InvalidArgumentException;
+			throw new ParallaxChannel_InvalidParameterException;
 		}
 		return $this->sId;
 	}
 
-	abstract public function _sendMessage(Message $oMsg);
-	abstract public function _recvMessage(): Message;
-
-	public function setMyEndpointId(string $sId)
+	public function serialize(): string
 	{
-		$this->sEndpointId=$sId;
-	}
-	public function getMyEndpointId(): string
-	{
-		return $this->sEndpointId;
+		return serialize($this);
 	}
 
-	public function getKnownEndpoints(): array
+	public function unserialize(/*string*/ $sData)
 	{
-		return $this->aSeenEndpoints;
+		$aData=unserialize($sData);
+		if (!is_array($aData))
+		{
+			throw new ParallaxChannel_InvalidParameterException;
+		}
+		foreach ($aData as $var => $data)
+		{
+			$this->$var=$data;
+		}
+		return; //all done
 	}
 
-	protected function addSeenEndpoint(string $sId)
+	public function setMessageBufferCount(int $iMessageCount=1)
 	{
-		$this->aSeenEndpoints[]=$sId;
+		if($iMessageCount< -1 || $iMessageCount > PHP_INT_MAX)
+		{
+			throw new ParallaxChannel_InvalidParameterException('Message count is invalid.');
+		}
+		$this->iMsgBuff=$iMessageCount;
 	}
 
-	abstract public function detectMode();
-
-	function getMode(): int
+	public function getMessageBufferCount(): int
 	{
-		return $this->iChannelMode;
+		return $this->iMsgBuff;
 	}
-
-	public function getEnv(): array
-	{
-		return (array) $this->set(MESSAGE_CTRL_ENV_GET, [], null, MESSAGE_TYPE_CTRL);
-	}
-	function mergeEnv(array $aData)
-	{
-		$this->set(MESSAGE_CTRL_ENV_MERGE, $aData, null, MESSAGE_TYPE_CTRL);
-	}	
-	public function get($sName)
+	
+	public function send($sName)
 	{
 		$oMsg=new Message;
-		$oMsg->iType=MESSAGE_TYPE_DATA;
 		$oMsg->sLabel=$sName;
 		return $this->_sendMessage($oMsg);
 	}
-	public function set($sName, $mValue, $sTargetEndpointId=null, int $iType=MESSAGE_TYPE_DATA)
+	public function set($sName, $mValue)
 	{
 		$oMsg=new Message;
-		$oMsg->iType=$iType;
 		$oMsg->sLabel=$sName;
 		$oMsg->mValue=$mValue;
-		return $this->_sendMessage($oMsg, $sTargetEndpointId);
+		return $this->_sendMessage($oMsg);
 	}
-	public function registerRemoteFunction(string $sFuncName=null, callable $hFunc)
-	{
-		// $this->set(MESSAGE_CTRL_ENV_MERGE, $aData, null, MESSAGE_TYPE_CTRL);
-	}
-
-	protected function callInbound()
-	{
-		# code...
-	}
-
-	#outbound
-	public function __call(string $sMeth, array $aParams)
-	{
-		//meth must be prefixed with callRemote
-		$this->set(MESSAGE_CTRL_RPC_CALL, [$sMeth, $aParams], null, MESSAGE_TYPE_CTRL);
-	}
-
 }

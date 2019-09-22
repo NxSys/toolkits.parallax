@@ -24,11 +24,21 @@
 /** @namespace Native Namespace */
 namespace NxSys\Toolkits\Parallax\Channel;
 
-use Serializable;
+use Serializable,
+	Iterator,
+	Countable;
+use NxSys\Core\ExtensibleSystemClasses as CoreEsc;
 
 const MODE_HOST='host';
 
-interface IChannel extends Serializable //esc?
+/**
+ * Emulates IT_MODE_FIFO | IT_MODE_DELETE
+ */
+interface IChannel extends
+	Serializable,
+	Iterator,
+	Countable
+	//, CoreEsc\SPL\ISplQueue
 {
 	const MODE_HOST=MODE_HOST;
 
@@ -40,23 +50,20 @@ interface IChannel extends Serializable //esc?
 	function setId(string $sId=null);
 	function getId(): string;
 
-	#for rpcs mostly
-	function setMyEndpointId(string $sId);
-	function getMyEndpointId(): string;
-	function getKnownEndpoints(): array;
+	function setMessageBufferCount(int $iCount = -1);
+	function getMessageBufferCount(): int;
 
+	function enqueue($mValue);
+	function dequeue();
+	
 	#figure out if this has to create the chan
-	function detectMode();
-	function getMode(): int;
+	// function detectMode();
+	// function getMode(): int;
 
-	function getEnv(): array;
-	function mergeEnv(array $aData);
+	// function getEnv(): array;
+	// function mergeEnv(array $aData);
 
 	// function sendJob(string $sJobClassname);
 	// function ctrlRunJob(string $sJob, array $aArguments);
 
-	function get($sName);
-	function set($sName, $mValue, $sTargetEndpointId=null, int $iType=MESSAGE_TYPE_DATA);
-	function registerRemoteFunction(string $sFuncName=null, callable $hFunc);
-	function __call(string $sMeth, array $aParams); //for rpc magic
 }

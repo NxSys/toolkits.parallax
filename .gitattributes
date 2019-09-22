@@ -15,10 +15,13 @@ src/Agent/ParallelAgent.php -text
 src/Agent/ProcessAgent.php -text
 src/Channel.php -text
 src/Channel/BaseChannel.php -text
+src/Channel/BaseRpcChannel.php -text
 src/Channel/IChannel.php -text
 src/Channel/IException.php -text
+src/Channel/IRpcChannel.php -text
 src/Channel/InMemoryChannel.php -text
 src/Channel/Message.php -text
+src/Channel/ParallaxChannel_InvalidParameterException.php -text
 src/Channel/ParallelChannel.php -text
 src/Channel/StdPipeChannel.php -text
 src/Channel/XMLSocketChannel.php -text

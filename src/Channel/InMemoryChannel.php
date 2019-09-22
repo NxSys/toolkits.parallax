@@ -6,13 +6,22 @@
 
 namespace NxSys\Toolkits\Parallax\Channel;
 
+use InvalidArgumentException;
 use NxSys\Toolkits\Parallax;
 
-class InMemoryChannel extends BaseChannel 
+class InMemoryChannel extends BaseChannel implements IChannel
 {
+	public $iMsgBuff=1;
 
 	// abstract public function _sendMessage(Message $oMsg);
 	// abstract public function _recvMessage(): Message;
 
-	
+	public function setMessageBufferCount(int $iMessageCount=1)
+	{
+		if ($iMessageCount>1)
+		{
+			throw new ParallaxChannel_InvalidParameterException("Message count must be 1");
+		}
+		parent::setMessageBufferCount($iMessageCount);
+	}	
 }

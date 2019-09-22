@@ -56,6 +56,9 @@ class ProcessAgent extends BaseAgent
 	/** @var Parallax\Channel\IChannel $oOutChannel Out Channel */
 	protected $oOutChannel;
 
+	/** @var String $sChannelType FQCN of Channel Type to use */
+	protected $sChannelType;
+
 
 	/**
 	 * @var sfProcess\PhpProcess
@@ -95,22 +98,32 @@ class ProcessAgent extends BaseAgent
 		return $this->aJobEnv['PARALLAX_AGENT_ID'];
 	}
 
-	public function setInChannel(Parallax\Channel\IChannel $oChannel)
+	public function setChannelType(string $sChannelClassName)
+	{
+		$this->sChannelType=$sChannelClassName;
+	}
+
+	public function getChannelType(): string
+	{
+		return $this->sChannelType;
+	}
+
+	protected function setInChannel(Parallax\Channel\IChannel $oChannel=null)
 	{
 		if($this->oInChannel)
 		{
 			$this->oInChannel->close();
 		}
-		$this->oInChannel=$oChannel;
+		$this->oInChannel=$oChannel?:new $this->getChannelType();
 	}
 
-	public function setOutChannel(Parallax\Channel\IChannel $oChannel)
+	protected function setOutChannel(Parallax\Channel\IChannel $oChannel=null)
 	{
 		if($this->oOutChannel)
 		{
 			$this->oOutChannel->close();
 		}
-		$this->oOutChannel=$oChannel;
+		$this->oOutChannel=$oChannel?:new $this->getChannelType();
 	}
 
 	public function getInChannel(): Parallax\Channel\IChannel
@@ -147,7 +160,6 @@ class ProcessAgent extends BaseAgent
 		
 		define('PARALLAX_AGENT_ID', getenv('PARALLAX_AGENT_ID'));
 		define('PARALLAX_JOB_CLASS', getenv('PARALLAX_JOB_CLASS'));
-		define('PARALLAX_JOB_FALLBACKPATH', getenv('PARALLAX_JOB_FALLBACKPATH'));
 		
 		try
 		{
@@ -157,26 +169,20 @@ class ProcessAgent extends BaseAgent
 			//now enter job loop
 				//get new job settings
 				//init job
-			$oCL=require_once getenv('PARALLAX_AL_PATH');
-			var_dump($oCL->findFile(PARALLAX_JOB_CLASS));
-			if(!$oCL->findFile(PARALLAX_JOB_CLASS))
-			{
-				error_log(sprintf(">>>CHECKPOINT %s::%s:%s<<<\n",  __FILE__, __FUNCTION__, __LINE__).PHP_EOL, 4);
-				$oCL->addClassMap([PARALLAX_JOB_CLASS => PARALLAX_JOB_FALLBACKPATH]);
-				// require_once PARALLAX_JOB_FALLBACKPATH;
-			}
-			if(!$oCL->loadClass(PARALLAX_JOB_CLASS))
+			require_once getenv('PARALLAX_JOB_LOADERPATH');
+			if(!class_exists(PARALLAX_JOB_CLASS))
 			{
 				error_log(sprintf(">>>CHECKPOINT %s::%s:%s<<<\n",  __FILE__, __FUNCTION__, __LINE__).PHP_EOL, 4);
 				#just bail now
 				throw new InvalidArgumentException;
 			}
 			#new is not smart enough...
-			$oJob=(new ReflectionClass(PARALLAX_JOB_CLASS))->newInstance(); 
+			$oJob=(new ReflectionClass(PARALLAX_JOB_CLASS))->newInstanceWithoutConstructor(); 
 			// $oJob->setInputChannel($oInData);
 			// $oJob->setOutputChannel($oOutData);
 			// $oJob->initialize();
 			// return $oJob->run($aArguments);
+			// quiescence?
 		}
 		catch (Throwable $e)
 		{
@@ -249,29 +255,8 @@ class ProcessAgent extends BaseAgent
 	public function run($sJob, array $aArguments = [])
 	{
 		(printf(">>>CHECKPOINT %s::%s:%s<<<\n", __CLASS__, __METHOD__, __LINE__));
-		// Okay... first we're going to see if conventional means can be used to find the Job class
-		if (   !is_string($sJob)
-			|| !$this->isJobClassLocatable($sJob))
-		{
-			//No? Well maybe the invoker has provided the means
-			// (unique composer instance?) to find the Job class?
-			if(	   !isset($aArguments['PARALLAX_JOB_LOADERPATH'])
-				|| !is_readable($aArguments['PARALLAX_JOB_LOADERPATH'])
-				|| !(include $aArguments['PARALLAX_JOB_LOADERPATH'])->findFile((string) $sJob) 
-				)
-			{
-				// Guess not...
-				throw new ParallaxRuntimeException_ProcessAgent_LaunchFailure(
-					'Unable to locate '.(string) $sJob.'. Does '
-					.( isset($aArguments['PARALLAX_JOB_LOADERPATH'])?$aArguments['PARALLAX_JOB_LOADERPATH']:'Composer' )
-					.' know how to find it?'
-				);
-			}
-		}
-		$this->aJobEnv['PARALLAX_JOB_LOADERPATH']=$this->resolveComposerAutoloaderPath();
-		$this->aJobEnv['PARALLAX_JOB_CLASS']=$sJob;
-		$this->aJobEnv['PARALLAX_JOB_FALLBACKPATH']=(new ReflectionClass($sJob))->getFileName();
-		
+		// $this->aJobEnv['PARALLAX_JOB_LOADERPATH']=$this->resolveComposerAutoloaderPath();
+		$this->aJobEnv['PARALLAX_JOB_CLASS']=$sJob;		
 		
 		$this->loadStubProcess();
 		//channels are available now
@@ -285,41 +270,6 @@ class ProcessAgent extends BaseAgent
 		return null;
 	}
 
-	protected function resolveComposerAutoloaderPath(): string
-	{
-		// 1) find path
-		// C:\dev\projects\onx\parallax\vendor\composer\ClassLoader.php
-		$sComLdrPath=(new ReflectionClass(self::COMPOSER_CLASSLOADER_CLASSPATH))->getFileName();
-		if(false==$sComLdrPath)
-		{
-			// then.... how did you load **me**?!?1
-			throw new ParallaxRuntimeException_ProcessAgent_LaunchFailure('Unable to locate Composer\Autoload\ClassLoader');
-		}
-		
-		// C:\dev\projects\onx\parallax\vendor
-		$sComPath =dirname($sComLdrPath, 2 /* remove composer\ClassLoader.php */);
-		$sComPath.=DIRECTORY_SEPARATOR.'autoload.php';
-		if(!is_readable($sComPath))
-		{
-			// again ... wut!?
-			throw new ParallaxRuntimeException_ProcessAgent_LaunchFailure('Unable to locate global autoload. Where is '.$sComPath.'?');			
-		}
-		return $sComPath;		
-	}
-
-	protected function locateJobClass($sJobClassName): string
-	{
-		// 1) find path
-		// MAGIC!
-		// 3) get instance
-		$oComposerLoader=include $this->resolveComposerAutoloaderPath();
-		return $oComposerLoader->findFile($sJobClassName);
-	}
-
-	protected function isJobClassLocatable($sJobClassName): bool
-	{
-		return (bool) $this->locateJobClass($sJobClassName);
-	}
 }
 class ParallaxRuntimeException_ProcessAgent_LaunchFailure extends RuntimeException implements Parallax\IException
 {}
