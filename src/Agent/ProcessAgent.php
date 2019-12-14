@@ -73,7 +73,39 @@ class ProcessAgent extends BaseAgent
 		(printf(">>>CHECKPOINT %s::%s:%s<<<\n", __CLASS__, __FUNCTION__, __LINE__));
 		$this->setAgentId();
 		$this->setJobLogFileName();
+		$this->setAutoloaderPath();
 		(printf(">>>CHECKPOINT %s::%s:%s<<<\n", __CLASS__, __FUNCTION__, __LINE__));
+	}
+
+	/**
+	 * Sets the value of the stub autoloader
+	 *
+	 * You may overide it to load you own code into the stub. 
+	 * This is supported as long as your file returns 'true'!
+	 *
+	 * @param string $sPath path to autoload.php
+	 * @return void
+	 * @throws if the stub has be executed already
+	 **/
+	public function setAutoloaderPath(string $sPath = 'vendor/autoload.php')
+	{
+		if($this->hProcessHost)
+		{
+			throw new Exception("You may not redeclare the autoloader after the stub has been executed.");
+		}
+		// We're not going to check is_readable, on the off chance that the stub
+		//  can get to the file "better" then we can...
+		$this->sStubAutoloaderPath=$this->aJobEnv['PARALLAX_JOB_LOADERPATH']=$sPath;
+	}
+
+	/**
+	 * Returns the configured autoloader path
+	 *
+	 * @return string
+	 **/
+	public function getAutoloaderPath(): string
+	{
+		return $this->sStubAutoloaderPath;
 	}
 
 	/**
@@ -115,6 +147,7 @@ class ProcessAgent extends BaseAgent
 			$this->oInChannel->close();
 		}
 		$this->oInChannel=$oChannel?:new $this->getChannelType();
+		$this->oInChannel->setId($this->getAgentId().'_I');
 	}
 
 	protected function setOutChannel(Parallax\Channel\IChannel $oChannel=null)
@@ -124,6 +157,8 @@ class ProcessAgent extends BaseAgent
 			$this->oOutChannel->close();
 		}
 		$this->oOutChannel=$oChannel?:new $this->getChannelType();
+		#is this supported??
+		$this->oInChannel->setId($this->getAgentId().'_O');
 	}
 
 	public function getInChannel(): Parallax\Channel\IChannel
@@ -152,24 +187,26 @@ class ProcessAgent extends BaseAgent
 	 * @throws conditon
 	 **/
 	public function generateStubBlock(Type $var = null): string
-	{
-		$sCode = <<< 'CODEBLOCK'
+	{	$sCode = <<< 'CODEBLOCK'
 		<?php
+		// var_dump($_ENV);
 		sleep(5);
 		error_log(sprintf(">>>CHECKPOINT %s::%s:%s<<<\n",  __FILE__, __FUNCTION__, __LINE__).PHP_EOL, 4);
 		
 		define('PARALLAX_AGENT_ID', getenv('PARALLAX_AGENT_ID'));
 		define('PARALLAX_JOB_CLASS', getenv('PARALLAX_JOB_CLASS'));
-		
+		define('PARALLAX_JOB_LOADERPATH', getenv('PARALLAX_JOB_LOADERPATH'));
+		echo PARALLAX_JOB_LOADERPATH;
 		try
 		{
+			require_once getenv('PARALLAX_JOB_LOADERPATH');
+			var_dump(getenv('PARALLAX_CH_IN'), getenv('PARALLAX_CH_OUT'));
 			$oInChan=unserialize(getenv('PARALLAX_CH_IN'));
 			$oOutChan=unserialize(getenv('PARALLAX_CH_OUT'));
 			
 			//now enter job loop
 				//get new job settings
 				//init job
-			require_once getenv('PARALLAX_JOB_LOADERPATH');
 			if(!class_exists(PARALLAX_JOB_CLASS))
 			{
 				error_log(sprintf(">>>CHECKPOINT %s::%s:%s<<<\n",  __FILE__, __FUNCTION__, __LINE__).PHP_EOL, 4);
@@ -222,10 +259,13 @@ class ProcessAgent extends BaseAgent
 		codecept_debug('channel');
 		codecept_debug($this->oInChannel);
 
+		//@TODO: Open channels
+
 		$this->aJobEnv['PARALLAX_CH_IN']=serialize($this->oInChannel);
 		$this->aJobEnv['PARALLAX_CH_OUT']=serialize($this->oOutChannel);
 
 		//set it up
+		// die(print_r(array_merge($_ENV, $this->aJobEnv), true));
 		$this->hProcessHost=new sfProcess\PhpProcess(
 			$this->generateStubBlock(),
 			getcwd(),

@@ -7,6 +7,7 @@
 /build.xml -text
 /codeception.yml -text
 /composer.json -text
+/proctest.cmd -text
 /sonar-project.properties -text
 src-docs/apigen.neon -text
 src/Agent/BaseAgent.php -text

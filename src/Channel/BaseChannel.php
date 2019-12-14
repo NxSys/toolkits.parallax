@@ -35,13 +35,15 @@ use NxSys\Toolkits\Parallax;
 
 /** Library Dependencies **/
 use NxSys\Core\ExtensibleSystemClasses as CoreEsc;
-use ParallaxChannel_InvalidParameterException;
+// use NxSys\Toolkits\Parallax\Channel\ParallaxChannel_InvalidParameterException;
 use RuntimeException;
 
 abstract class BaseChannel implements IChannel
 {
 	/** @var string $sId Global id for channel */
 	public $sId = null;
+
+	
 
 	/** @var int $iChannelMode MODE_HOST */
 	protected $iChannelMode = null;
@@ -61,7 +63,7 @@ abstract class BaseChannel implements IChannel
 		else
 		{
 			//perm ids
-			throw new ParallaxChannel_InvalidParameterException;
+			// throw new ParallaxChannel_InvalidParameterException('Channel IDs must not be set twice.');
 		}
 		return;
 	}
@@ -80,22 +82,29 @@ abstract class BaseChannel implements IChannel
 
 	public function serialize(): string
 	{
+		$this->shutdown();
 		return serialize($this);
 	}
 
 	public function unserialize(/*string*/ $sData)
 	{
-		$aData=unserialize($sData);
+		$aData=(array) unserialize($sData);
 		if (!is_array($aData))
 		{
 			throw new ParallaxChannel_InvalidParameterException;
 		}
 		foreach ($aData as $var => $data)
 		{
-			$this->$var=$data;
+			if (substr($var, 0, 1) !== "\0")
+			{
+				$this->$var=$data;
+			}
 		}
+		$this->startup();
 		return; //all done
 	}
+	abstract protected function startup();
+	abstract protected function shutdown();
 
 	public function setMessageBufferCount(int $iMessageCount=1)
 	{
@@ -123,5 +132,10 @@ abstract class BaseChannel implements IChannel
 		$oMsg->sLabel=$sName;
 		$oMsg->mValue=$mValue;
 		return $this->_sendMessage($oMsg);
+	}
+
+	function __destruct()
+	{
+		$this->close();
 	}
 }

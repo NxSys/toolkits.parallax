@@ -36,7 +36,7 @@ const MODE_HOST='host';
  */
 interface IChannel extends
 	Serializable,
-	Iterator,
+	// Iterator,
 	Countable
 	//, CoreEsc\SPL\ISplQueue
 {
@@ -44,6 +44,15 @@ interface IChannel extends
 
 	// function configure(string $sId, array $aConfig);
 
+	/**
+	 * Initializes the channel 
+	 *
+	 * Setup and notes parameters for the the memory segment
+	 * Note: use a mode of 0760 to allow 'group' access to the segment
+	 *
+	 * @return bool if this operation succeded
+	 * @throws conditon
+	 **/
 	function open();
 	function close();
 
@@ -53,7 +62,7 @@ interface IChannel extends
 	function setMessageBufferCount(int $iCount = -1);
 	function getMessageBufferCount(): int;
 
-	function enqueue($mValue);
+	function enqueue(Message $mValue);
 	function dequeue();
 	
 	#figure out if this has to create the chan

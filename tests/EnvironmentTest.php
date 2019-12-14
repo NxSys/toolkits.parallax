@@ -24,7 +24,10 @@ class EnvironmentTest extends \Codeception\Test\Unit
 	public function testRequiredExtensionsPresent()
 	{
 		$aReqdExts=[
-			'parallel',
+			//'parallel',	
+			'shmop',
+
+			//core
 			'SPL'
 		];
 		foreach ($aReqdExts as $key => $reqext)
