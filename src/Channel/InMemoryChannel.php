@@ -69,7 +69,7 @@ class InMemoryChannel extends BaseChannel implements IChannel
 	protected function zero()
 	{
 		shmop_write($this->hSegment,
-			 str_pad('', self::DEFAULT_SEGMENT_SIZE-DEFAULT_SEGMENT_DATA_OFFSET+1, "\0"),
+			 str_pad('', self::DEFAULT_SEGMENT_SIZE-self::DEFAULT_SEGMENT_DATA_OFFSET+1, "\0"),
 			 self::DEFAULT_SEGMENT_DATA_OFFSET);	
 		return;	
 	}
@@ -113,7 +113,7 @@ class InMemoryChannel extends BaseChannel implements IChannel
 	/**
 	 *  @inheritdoc
 	 */
-	publicM function close()
+	public function close()
 	{
 		//never opened it!
 		if (!$this->hSegment)
