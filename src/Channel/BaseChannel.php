@@ -43,7 +43,8 @@ abstract class BaseChannel implements IChannel
 	/** @var string $sId Global id for channel */
 	public $sId = null;
 
-	
+	/** @var array $aConfig settings require for setup */
+	protected $aConfig = [];
 
 	/** @var int $iChannelMode MODE_HOST */
 	protected $iChannelMode = null;
@@ -80,27 +81,28 @@ abstract class BaseChannel implements IChannel
 		return $this->sId;
 	}
 
-	public function serialize(): string
+	public function getChannelResourceName(): string
 	{
-		$this->shutdown();
-		return serialize($this);
+		// <driver>:<channelId>?<opts>
+		$sCRNfmt='%s:%s?%s';
+		$sCRNData=http_build_query($this->aConfig);
+		// $this->shutdown(); why should this have side effects
+		return sprintf($sCRNfmt, get_class(), $this->getId(), $sCRNData);
 	}
 
-	public function unserialize(/*string*/ $sData)
+	public function openChannelResourceName(/*string*/ $sCRN)
 	{
-		$aData=(array) unserialize($sData);
-		if (!is_array($aData))
+		//check type
+		$aCRN=parse_url($sCRN);
+		if (!$aCRN)
 		{
-			throw new ParallaxChannel_InvalidParameterException;
+			throw new ParallaxChannel_InvalidParameterException("Error Processing Request", 1);
 		}
-		foreach ($aData as $var => $data)
-		{
-			if (substr($var, 0, 1) !== "\0")
-			{
-				$this->$var=$data;
-			}
-		}
-		$this->startup();
+
+		//check CRN standard
+
+		//should be "well formed"
+		$this->startup($aCRN);
 		return; //all done
 	}
 	abstract protected function startup();
@@ -119,7 +121,7 @@ abstract class BaseChannel implements IChannel
 	{
 		return $this->iMsgBuff;
 	}
-	
+
 	public function send($sName)
 	{
 		$oMsg=new Message;

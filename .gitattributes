@@ -28,6 +28,9 @@ src/Channel/StdPipeChannel.php -text
 src/Channel/XMLSocketChannel.php -text
 src/IAgentModel.php -text
 src/IException.php -text
+src/Job/AgentClient/BaseAgentClient.php -text
+src/Job/AgentClient/IAgentAware.php -text
+src/Job/AgentClient/ProcessAgentClient.php -text
 src/Job/Async.php -text
 src/Job/BaseJob.php -text
 src/Job/Coroutine.php -text

@@ -53,6 +53,8 @@ abstract class BaseAgent
 {
 	protected $hThreadRuntime = False;
 
+	public $bAllowForgetableJobs=false;
+
 	public function __construct()
 	{
 		(printf(">>>CHECKPOINT %s::%s:%s<<<\n", __CLASS__, __FUNCTION__, __LINE__));
@@ -86,8 +88,20 @@ abstract class BaseAgent
 	public function setChannelManager(Parallax\Channel\IChannel $oChannel)
 	{
 
-	}	
+	}
 
+	abstract protected function getJobStatus(): int;
+	public function isJobRunning(): bool
+	{
+		return $this->getJobStatus()=='running';
+	}
+
+	abstract protected function setJobStatus($status): bool;
+
+	public function stopJob()
+	{
+		return $this->setJobStatus('stop');
+	}
 
 
 	abstract public function run(/* BaseJob */ $oJob, array $aArguments = []);

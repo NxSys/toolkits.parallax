@@ -17,7 +17,7 @@ const INMEM_DEFAULT_SEGMENT_FLAG='w';
 const INMEM_DEFAULT_SEGMENT_MODE='0700';
 
 /**
- * 
+ *
  * @todo start storing\using data lengths
  */
 class InMemoryChannel extends BaseChannel implements IChannel
@@ -26,7 +26,7 @@ class InMemoryChannel extends BaseChannel implements IChannel
 	const DEFAULT_SEGMENT_SIZE=INMEM_DEFAULT_SEGMENT_SIZE;
 	const DEFAULT_SEGMENT_FLAG=INMEM_DEFAULT_SEGMENT_FLAG;
 	const DEFAULT_SEGMENT_MODE=INMEM_DEFAULT_SEGMENT_MODE;
-	
+
 	/** @var resource $hSegment Handle to Memory Segment */
 	protected $hSegment = null;
 
@@ -70,16 +70,17 @@ class InMemoryChannel extends BaseChannel implements IChannel
 	{
 		shmop_write($this->hSegment,
 			 str_pad('', self::DEFAULT_SEGMENT_SIZE-self::DEFAULT_SEGMENT_DATA_OFFSET+1, "\0"),
-			 self::DEFAULT_SEGMENT_DATA_OFFSET);	
-		return;	
+			 self::DEFAULT_SEGMENT_DATA_OFFSET);
+		return;
 	}
 
 	/**
 	 * @inheritdoc
 	 */
-	public function open($iSegmentSize=INMEM_DEFAULT_SEGMENT_SIZE, 
+	public function open($iSegmentSize=INMEM_DEFAULT_SEGMENT_SIZE,
 		$sSegmentFlag=INMEM_DEFAULT_SEGMENT_FLAG, $iSegmentMode=INMEM_DEFAULT_SEGMENT_MODE)
 	{
+		# plx+shm:000148680000000054f849ab00000000648c43d8_I?k=0xABCD&s=65280&f=w&m=700
 		$iKey=$this->convertId($this->getId());
 		if(isset(self::$aUsedKeys[$iKey]))
 		{
@@ -88,16 +89,28 @@ class InMemoryChannel extends BaseChannel implements IChannel
 		$this->aConfig=[$iKey, $sSegmentFlag, $iSegmentMode, $iSegmentSize];
 	}
 
-	protected function startup()
+	protected function startup($aCRN)
 	{
+		if ($this->getId() && $this->getId()!=$aCRN['path'])
+		{
+			throw new ParallaxChannel_InvalidParameterException($aCRN['path'].' is invalid', 1);
+		}
+		$this->setId($aCRN['path']);
+
+		parse_str($aCRN['query'], $this->aConfig);
 		if(!$this->aConfig || 4!=count($this->aConfig))
 		{
 			throw new LengthException('Config array must have a lengh of 4.');
-			
+
 		}
+		#new func?
+		#@todo make sure order isn't bugged....
 		list($iKey, $sSegmentFlag, $iSegmentMode, $iSegmentSize) = $this->aConfig;
+
+		// ::open...?
 		$this->hSegment=shmop_open($iKey, $sSegmentFlag, $iSegmentMode, $iSegmentSize);
 		debug_print_backtrace();
+		return;
 	}
 
 	protected function shutdown()
@@ -107,7 +120,7 @@ class InMemoryChannel extends BaseChannel implements IChannel
 			return;
 		}
 		shmop_close($this->hSegment);
-		unset($this->hSegment);	
+		unset($this->hSegment);
 		//fyi shutdown will not delete the segment
 	}
 	/**
@@ -136,7 +149,7 @@ class InMemoryChannel extends BaseChannel implements IChannel
 	 * Hashes a value passed and takes the first 8 hex digits of it
 	 *
 	 * @param string $sId Id string
-	 * @return int
+	 * @return string
 	 * @throws conditon
 	 **/
 	public function convertId(string $sId)
@@ -151,7 +164,7 @@ class InMemoryChannel extends BaseChannel implements IChannel
 			throw new ParallaxChannel_InvalidParameterException("Message count must be 1");
 		}
 		parent::setMessageBufferCount($iMessageCount);
-	}	
+	}
 
 	public function __descruct()
 	{

@@ -35,7 +35,7 @@ const MODE_HOST='host';
  * Emulates IT_MODE_FIFO | IT_MODE_DELETE
  */
 interface IChannel extends
-	Serializable,
+	// Serializable,
 	// Iterator,
 	Countable
 	//, CoreEsc\SPL\ISplQueue

@@ -20,6 +20,7 @@ class SampleJob extends BaseJob
 	public function run()
 	{
 		//do work!
+		`start notepad`;
 		return $this->v;
 	}
 }
