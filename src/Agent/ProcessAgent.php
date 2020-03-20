@@ -270,8 +270,8 @@ class ProcessAgent extends BaseAgent
 
 		//@TODO: Open channels
 
-		$this->aJobEnv['PARALLAX_CH_IN']=serialize($this->oInChannel);
-		$this->aJobEnv['PARALLAX_CH_OUT']=serialize($this->oOutChannel);
+		$this->aJobEnv['PARALLAX_CH_IN']=base64_encode(serialize($this->oInChannel));
+		$this->aJobEnv['PARALLAX_CH_OUT']=base64_encode(serialize($this->oOutChannel));
 
 		//set it up
 		// die(print_r(array_merge($_ENV, $this->aJobEnv), true));
@@ -282,12 +282,16 @@ class ProcessAgent extends BaseAgent
 			array_merge($_ENV, $this->aJobEnv)
 		);
 		//start it up
+		codecept_debug('starting...');
+		codecept_debug($this->aJobEnv);
 		try
 		{
 			$this->hProcessHost->run();
 		}
 		catch (ProcessFailedException $ex)
 		{
+			codecept_debug('failed?');
+
 			throw new ParallaxRuntimeException_ProcessAgent_LaunchFailure('Process did not launch successfully. Internal exception', $ex);
 		}
 
@@ -320,28 +324,28 @@ class ProcessAgent extends BaseAgent
 		return null;
 	}
 
-	protected function getJobStatus(): string
+	protected function getJobStatus(): int
 	{
-		$sStatus=$this->hProcessHost->getStatus();
+		$iStatus=$this->hProcessHost->getStatus();
 		//convert?
-		return $sStatus;
+		return $iStatus;
 	}
 
-	protected function setJobStatus($sStatus)
-	{
-		//use different s/c is job is Agent aware?
-			#should ProcAgent jobs be allowed to use signals??
-		switch ($sStatus)
-		{
-			case 'stop':
-				$this->hProcessHost->stop();
-				break;
+	// protected function setJobStatus($sStatus): bool
+	// {
+	// 	//use different s/c is job is Agent aware?
+	// 		#should ProcAgent jobs be allowed to use signals??
+	// 	switch ($sStatus)
+	// 	{
+	// 		case \NxSys\Toolkits\Parallax\Job\JOB:
+	// 			$this->hProcessHost->stop();
+	// 			break;
 
-			default:
-				# code...
-				break;
-		}
-	}
+	// 		default:
+	// 			# code...
+	// 			break;
+	// 	}
+	// }
 
 }
 class ParallaxRuntimeException_ProcessAgent_LaunchFailure extends RuntimeException implements Parallax\IException

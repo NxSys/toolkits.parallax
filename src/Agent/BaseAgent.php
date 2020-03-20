@@ -22,9 +22,10 @@
 namespace NxSys\Toolkits\Parallax\Agent;
 
 /** Local Project Dependencies **/
-use NxSys\Toolkits\Parallax;
-use NxSys\Toolkits\Parallax\Job\BaseJob;
-use NxSys\Toolkits\Parallax\Job\Fiber;
+use NxSys\Toolkits\Parallax,
+	NxSys\Toolkits\Parallax\Job,
+	NxSys\Toolkits\Parallax\Job\BaseJob,
+	NxSys\Toolkits\Parallax\Job\Fiber;
 
 /** Framework Dependencies **/
 use parallel\Runtime as Thread_Runtime;
@@ -38,6 +39,7 @@ use Closure;
 
 /** Library Dependencies **/
 use NxSys\Core\ExtensibleSystemClasses as CoreEsc;
+use NxSys\Toolkits\Parallax\Job\IJob;
 
 const DEFAULT_CHANNEL_CAPACITY = 1024;
 
@@ -93,15 +95,15 @@ abstract class BaseAgent
 	abstract protected function getJobStatus(): int;
 	public function isJobRunning(): bool
 	{
-		return $this->getJobStatus()=='running';
+		return $this->getJobStatus()==Job\JOB_STATUS_RUNNING;
 	}
 
-	abstract protected function setJobStatus($status): bool;
+	// abstract protected function setJobStatus(int $iStatus): bool;
 
-	public function stopJob()
-	{
-		return $this->setJobStatus('stop');
-	}
+	// public function stopJob()
+	// {
+	// 	return $this->setJobStatus('stop');
+	// }
 
 
 	abstract public function run(/* BaseJob */ $oJob, array $aArguments = []);

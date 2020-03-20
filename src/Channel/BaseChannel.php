@@ -105,7 +105,7 @@ abstract class BaseChannel implements IChannel
 		$this->startup($aCRN);
 		return; //all done
 	}
-	abstract protected function startup();
+	abstract protected function startup(array $aCRN);
 	abstract protected function shutdown();
 
 	public function setMessageBufferCount(int $iMessageCount=1)

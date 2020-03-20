@@ -43,6 +43,7 @@ src/Supervisor.php -text
 src/ThreadBooter.php -text
 src/ThreadModel/Models.txt -text
 src/WatchDog.php -text
+/test.php -text
 tests/ApiConformityTest.php -text
 tests/BasicTest.php -text
 tests/EnvironmentTest.php -text

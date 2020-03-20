@@ -14,7 +14,7 @@ class ProcessAgentClient extends BaseAgentClient
 		// [PARALLAX_JOB_LOGFILE] => C:\exec\scoop\persist\php\cli\parallax_process.log
 		// [PARALLAX_JOB_LOADERPATH] => vendor/autoload.php
 		// [PARALLAX_JOB_CLASS] => NxSys\Toolkits\Parallax\SampleJob
-		$this->setLogger();
+		// $this->setLogger(); #todo
 
 		getenv('PARALLAX_AGENT_ID');
 		getenv('PARALLAX_JOB_LOGFILE');
@@ -22,6 +22,6 @@ class ProcessAgentClient extends BaseAgentClient
 		getenv('PARALLAX_JOB_CLASS');
 
 		//plx+shm:000148680000000054f849ab00000000648c43d8_I?k=0xABCD&s=65280&f=w&m=700
-		getenv('PARALLAX_IPCURN_I');
+		getenv('PARALLAX_CRN_I');
 	}
 }

@@ -1,4 +1,4 @@
-<?php 
+<?php
 
 namespace NxSys\Toolkits\Parallax;
 
@@ -45,9 +45,10 @@ class NewProcessTest extends \Codeception\Test\Unit
 		// $oAgent->setOutChannel();
 
 		//execute
-		// CST AL is.... wierd..... lets replace it
+		// CCT AL is.... wierd..... lets replace it
+		// #$this->sPathToComposerLoader,
 		$aParams=[
-			'PARALLAX_JOB_LOADERPATH' => $this->sPathToComposerLoader,
+			'PARALLAX_JOB_LOADERPATH' => 'vendor/autoload.php',
 			'val' => 1
 		];
 		codecept_debug($aParams);

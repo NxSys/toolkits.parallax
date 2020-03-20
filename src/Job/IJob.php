@@ -33,6 +33,40 @@ use NxSys\Toolkits\Parallax;
 /** Library Dependencies **/
 use NxSys\Core\ExtensibleSystemClasses as CoreEsc;
 
+/**
+ * Job has not been initilaized correctly.
+ */
+const JOB_STATUS_INVALID=null;
+
+/**
+ * Job is ready to run.
+ */
+const JOB_STATUS_LOADED=	100;
+
+/**
+ * Job is currently executing
+ */
+const JOB_STATUS_RUNNING=	200;
+
+/**
+ * Job has stoped running until told to resume
+ */
+const JOB_STATUS_PAUSED=	300;
+
+/**
+ * Job has encountered an excetional condition
+ */
+const JOB_STATUS_EXCEPTION=	500;
+
+/**
+ * Job has completed sucessfully
+ */
+const JOB_STATUS_DONE=		600;
+
+/**
+ * Job has been unloaded from memory
+ */
+const JOB_STATUS_CLOSED=	900;
 
 /**
  * Interface for executable/runable object
@@ -44,6 +78,14 @@ use NxSys\Core\ExtensibleSystemClasses as CoreEsc;
  */
  interface IJob
  {
+	const STATUS_INVALID=	JOB_STATUS_INVALID;
+	const STATUS_LOADED=	JOB_STATUS_LOADED;
+	const STATUS_RUNNING=	JOB_STATUS_RUNNING;
+	const STATUS_PAUSED=	JOB_STATUS_PAUSED;
+	const STATUS_EXCEPTION=	JOB_STATUS_EXCEPTION;
+	const STATUS_DONE=		JOB_STATUS_DONE;
+	const STATUS_CLOSED=	JOB_STATUS_CLOSED;
+
 	//protected function run();
 	// function start();
 	// function isRunning();
