@@ -29,6 +29,23 @@ class BaseAgentClient implements IAgentAware
 		return self::$hInstance;
 	}
 
+	public function registerJob(array $aSettings)
+	{
+
+	}
+
+
+	public function setAgentInitializationRoutine(callable $hAgentCallback): void
+	{
+
+	}
+
+	protected function getAgentInitializationRoutine(): callable
+	{
+		# code...
+	}
+
+
 	public function getEvent(): Message
 	{
 		# code...
@@ -39,5 +56,42 @@ class BaseAgentClient implements IAgentAware
 	{
 		# code...
 		return [];
+	}
+
+	public function getStartUpChannels(): array //Channel[]
+	{
+
+	}
+	public function getSystemChannels(): array //Channel[]
+	{
+		
+	}
+
+
+	//signals
+
+	protected function sendSignal(Type $var = null)
+	{
+		# code...
+	}
+
+	public function sendStartupSignal(): bool
+	{
+		# code...
+	}
+
+	public function sendShutdownSignal(): bool
+	{
+			
+	}
+
+	public function sendHaltSignal(): bool
+	{
+		# code...
+	}
+
+	public function sendContinueSignal(): bool
+	{
+		# code...
 	}
 }

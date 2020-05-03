@@ -7,10 +7,10 @@ interface IAgentAware
 
 	function registerJob(array $aSettings);
  
-	function signalStartup(): bool;
-	function signalShutdown(): bool;
-	function signalHalt(): bool;
-	function signalContinue(): bool;
+	function sendStartupSignal(): bool;
+	function sendShutdownSignal(): bool;
+	function sendHaltSignal(): bool;
+	function sendContinueSignal(): bool;
 
 	// protected function signalAgent(string $sSignalName, $sSignalData): bool;
 
