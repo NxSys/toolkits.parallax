@@ -1,4 +1,4 @@
-<?php 
+<?php
 
 namespace NxSys\Toolkits\Parallax;
 
@@ -24,7 +24,7 @@ class EnvironmentTest extends \Codeception\Test\Unit
 	public function testRequiredExtensionsPresent()
 	{
 		$aReqdExts=[
-			//'parallel',	
+			//'parallel',
 			'shmop',
 
 			//core
@@ -40,8 +40,13 @@ class EnvironmentTest extends \Codeception\Test\Unit
 		$this->assertEmpty($aReqdExts, 'extentions are missing: '.implode(', ', $aReqdExts));
 	}
 
+	/**
+	 * @group parallel
+	 */
 	public function testMinParallelVersionPresent()
 	{
+		$this->markTestSkipped('parallel is not supported in this interation');
+
 		$ver=(new ReflectionExtension('parallel'))->getVersion();
 		$this->assertLessThanOrEqual(version_compare($ver, '1.1.1'), 0);
 	}

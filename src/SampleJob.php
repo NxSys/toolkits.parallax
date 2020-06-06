@@ -21,6 +21,7 @@ class SampleJob extends BaseJob
 
 	public function run()
 	{
+		//prob ProcessAgentClient
 		$oAgentClient=Job\AgentClient\BaseAgentClient::getConfiguredInstance();
 
 		//do work!

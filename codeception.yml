@@ -7,7 +7,7 @@ suites:
         path: .
 
 settings:
-    bootstrap: ..\vendor\autoload.php
+    #bootstrap: ..\vendor\autoload.php
     shuffle: true
     lint: true
     strict_xml: true

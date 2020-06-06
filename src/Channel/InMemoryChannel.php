@@ -9,6 +9,7 @@ namespace NxSys\Toolkits\Parallax\Channel;
 use InvalidArgumentException;
 use LengthException;
 use NxSys\Toolkits\Parallax;
+use NxSys\Toolkits\Parallax\Agent\ParallaxRuntimeException_ProcessAgent_LaunchFailure;
 use ParallaxChannel_InvalidParameterException;
 
 const INMEM_DEFAULT_SEGMENT_DATA_OFFSET=256;
@@ -46,8 +47,13 @@ class InMemoryChannel extends BaseChannel implements IChannel
 			$this->open();
 		}
 		$this->zero();
-		shmop_write($this->hSegment, serialize($oMsg),self::DEFAULT_SEGMENT_DATA_OFFSET);
-		return;
+		if (strlen(serialize($oMsg))
+			> $this->aConfig['SegmentSize']+self::DEFAULT_SEGMENT_DATA_OFFSET)
+		{
+			throw new ParallaxChannel_MessageSizeTooLargeException;
+		}
+		$ret=shmop_write($this->hSegment, serialize($oMsg), self::DEFAULT_SEGMENT_DATA_OFFSET);
+		return $ret;
 	}
 
 	public function dequeue(bool $isReadOnce=false): Message
@@ -57,7 +63,12 @@ class InMemoryChannel extends BaseChannel implements IChannel
 		{
 			$this->open();
 		}
-		$sData=shmop_read($this->hSegment, self::DEFAULT_SEGMENT_DATA_OFFSET, self::DEFAULT_SEGMENT_SIZE);
+		// if (self::DEFAULT_SEGMENT_DATA_OFFSET+$this->aConfig['SegmentSize']>) {
+		// 	# code...
+		// }
+
+		// codecept_debug(sprintf('dequeue:%s///%s', self::DEFAULT_SEGMENT_DATA_OFFSET, $this->aConfig['SegmentSize']-1));
+		$sData=shmop_read($this->hSegment, self::DEFAULT_SEGMENT_DATA_OFFSET, $this->aConfig['SegmentSize']);
 		$oMsg=unserialize(trim($sData));
 		if($isReadOnce)
 		{
@@ -68,17 +79,25 @@ class InMemoryChannel extends BaseChannel implements IChannel
 
 	protected function zero()
 	{
-		shmop_write($this->hSegment,
-			 str_pad('', self::DEFAULT_SEGMENT_SIZE-self::DEFAULT_SEGMENT_DATA_OFFSET+1, "\0"),
-			 self::DEFAULT_SEGMENT_DATA_OFFSET);
+		shmop_write(
+			$this->hSegment,
+			str_pad('', $this->aConfig['SegmentSize'], "\0"),
+			self::DEFAULT_SEGMENT_DATA_OFFSET);
 		return;
 	}
 
 	/**
-	 * @inheritdoc
+	 * Undocumented function
+	 *
+	 * Note: Subclasses that expect to communicate with third party applications should overide
+	 * this function and device a method to set an appropreate shared memory key.
+	 *
+	 * @param integer $iSegmentSize Defaults to INMEM_DEFAULT_SEGMENT_SIZE
+	 * @param string $sSegmentFlag Defaults to INMEM_DEFAULT_SEGMENT_FLAG
+	 * @param integer $iSegmentMode Defaults to INMEM_DEFAULT_SEGMENT_MODE
+	 * @return void
 	 */
-	public function open($iSegmentSize=INMEM_DEFAULT_SEGMENT_SIZE,
-		$sSegmentFlag=INMEM_DEFAULT_SEGMENT_FLAG, $iSegmentMode=INMEM_DEFAULT_SEGMENT_MODE)
+	public function open(... $aArgs)
 	{
 		# plx+shm:000148680000000054f849ab00000000648c43d8_I?k=0xABCD&s=65280&f=w&m=700
 		$iKey=$this->convertId($this->getId());
@@ -86,30 +105,83 @@ class InMemoryChannel extends BaseChannel implements IChannel
 		{
 			throw new ParallaxChannel_InvalidParameterException("Reusing keys is not supported by this transport.");
 		}
-		$this->aConfig=[$iKey, $sSegmentFlag, $iSegmentMode, $iSegmentSize];
+		// list($iKey, $sSegmentFlag, $iSegmentMode, $iSegmentSize) = $this->aConfig;
+
+		$this->aConfig = array_combine(["SegmentSize", "SegmentFlag", "SegmentMode"], $aArgs);
+		$this->aConfig["Key"] = $iKey;
+		$this->prepareConfigOptions();
+		// codecept_debug($this->aConfig);
+		// codecept_debug(var_export($this->aConfig["SegmentSize"], true));
+		$this->hSegment=shmop_open($this->aConfig["Key"],
+								   $this->aConfig["SegmentFlag"],
+								   $this->aConfig["SegmentMode"],
+								   INMEM_DEFAULT_SEGMENT_DATA_OFFSET+$this->aConfig["SegmentSize"]
+								);
 	}
 
-	protected function startup($aCRN)
-	{
-		if ($this->getId() && $this->getId()!=$aCRN['path'])
-		{
-			throw new ParallaxChannel_InvalidParameterException($aCRN['path'].' is invalid', 1);
-		}
-		$this->setId($aCRN['path']);
 
-		parse_str($aCRN['query'], $this->aConfig);
+	protected function prepareConfigOptions(): bool
+	{
+		if ($this->aConfig["SegmentSize"] == null)
+		{
+			$this->aConfig["SegmentSize"] = INMEM_DEFAULT_SEGMENT_SIZE;
+		}
+		if (is_string($this->aConfig["SegmentSize"]))
+		{
+			$this->aConfig["SegmentSize"] = (int) $this->aConfig["SegmentSize"];
+		}
+
+
+		if ($this->aConfig["SegmentFlag"] == null)
+		{
+			$this->aConfig["SegmentFlag"] = INMEM_DEFAULT_SEGMENT_FLAG;
+		}
+		if ($this->aConfig["SegmentMode"] == null)
+		{
+			$this->aConfig["SegmentMode"] = INMEM_DEFAULT_SEGMENT_MODE;
+		}
+		if (is_string($this->aConfig["SegmentMode"]))
+		{
+			$this->aConfig["SegmentMode"] = (int) $this->aConfig["SegmentMode"];
+		}
+
+
 		if(!$this->aConfig || 4!=count($this->aConfig))
 		{
 			throw new LengthException('Config array must have a lengh of 4.');
 
 		}
+
+		return true;
+	}
+
+	/**
+	 * @inheritDoc
+	 */
+	protected function startup(array $aCRN)
+	{
+		codecept_debug($aCRN);
+		if ($this->sId && $this->getId()!=$aCRN['path'])
+		{
+			throw new ParallaxChannel_InvalidParameterException($aCRN['path'].' is invalid');
+		}
+		$this->setId($aCRN['path']);
+
+		// parse_str($aCRN['query'], $this->aConfig);
+		parse_str($aCRN['query'], $this->aConfig);
+		codecept_debug($this->aConfig);
+
+		//check query order?
+		unset($this->aConfig['k']); //see
+		$this->open(...array_values($this->aConfig));
+
 		#new func?
 		#@todo make sure order isn't bugged....
-		list($iKey, $sSegmentFlag, $iSegmentMode, $iSegmentSize) = $this->aConfig;
+		//list($iKey, $sSegmentFlag, $iSegmentMode, $iSegmentSize) = $this->aConfig;
 
 		// ::open...?
-		$this->hSegment=shmop_open($iKey, $sSegmentFlag, $iSegmentMode, $iSegmentSize);
-		debug_print_backtrace();
+		//$this->hSegment=shmop_open($iKey, $sSegmentFlag, $iSegmentMode, $iSegmentSize);
+		//debug_print_backtrace();
 		return;
 	}
 
@@ -134,8 +206,9 @@ class InMemoryChannel extends BaseChannel implements IChannel
 			return;
 		}
 		self::$aUsedKeys[]=$this->convertId($this->getId()); //this key is retired!
-		shmop_close($this->hSegment);
+
 		shmop_delete($this->hSegment);
+		shmop_close($this->hSegment);
 		return;
 	}
 	public function count()
@@ -154,7 +227,8 @@ class InMemoryChannel extends BaseChannel implements IChannel
 	 **/
 	public function convertId(string $sId)
 	{
-		return substr(hash('md5', $sId), 0, 16);
+		codecept_debug(hexdec("0" . substr(hash('md5', $sId), 0, 15)));
+		return hexdec("0" . substr(hash('md5', $sId), 0, 15));
 	}
 
 	public function setMessageBufferCount(int $iMessageCount=1)
@@ -166,7 +240,7 @@ class InMemoryChannel extends BaseChannel implements IChannel
 		parent::setMessageBufferCount($iMessageCount);
 	}
 
-	public function __descruct()
+	public function __destruct()
 	{
 		$this->close();
 	}

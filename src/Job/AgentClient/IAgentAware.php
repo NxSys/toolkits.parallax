@@ -3,10 +3,11 @@ namespace NxSys\Toolkits\Parallax\Job\AgentClient;
 
 interface IAgentAware
 {
-	function setAgentInitializationRoutine(callable $hAgentCallback): void;
+	// function setAgentInitializationRoutine(callable $hAgentCallback): void; replaced by setup()?
+	function setup();
 
 	function registerJob(array $aSettings);
- 
+
 	function sendStartupSignal(): bool;
 	function sendShutdownSignal(): bool;
 	function sendHaltSignal(): bool;

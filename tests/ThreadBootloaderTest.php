@@ -1,5 +1,8 @@
 <?php namespace NxSys\Toolkits\Parallax;
 
+/**
+ * @group parallel
+ */
 class ThreadBootloaderTest extends \Codeception\Test\Unit
 {
 	public $I;

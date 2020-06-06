@@ -1,15 +1,14 @@
 <?php
 namespace NxSys\Toolkits\Parallax\Job\AgentClient;
 
+use NXS_PARALLAX_STUB;
 class ProcessAgentClient extends BaseAgentClient
 {
 	public function setup()
 	{
-		$this->setAgentInitializationRoutine([$this, 'initProcessAgent']);
-	}
+		NXS_PARALLAX_STUB\_L(print_r($_SERVER, true));
+		// NXS_PARALLAX_STUB\_L(print_r(get_defined_constants(true)['user'], true));
 
-	public function initProcessAgent()
-	{
 		// [PARALLAX_AGENT_ID] => 000148680000000054f849ab00000000648c43d8
 		// [PARALLAX_JOB_LOGFILE] => C:\exec\scoop\persist\php\cli\parallax_process.log
 		// [PARALLAX_JOB_LOADERPATH] => vendor/autoload.php

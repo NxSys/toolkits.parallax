@@ -76,7 +76,7 @@ abstract class BaseChannel implements IChannel
 	{
 		if (!$this->sId)
 		{
-			throw new ParallaxChannel_InvalidParameterException;
+			throw new ParallaxChannel_InvalidParameterException('There is no id. Have you called ::startup()?');
 		}
 		return $this->sId;
 	}

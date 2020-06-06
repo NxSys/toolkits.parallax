@@ -1,18 +1,24 @@
 <?php
 namespace NxSys\Toolkits\Parallax\Job\AgentClient;
 
+use NxSys\Toolkits\Parallax\Job;
+
 use NxSys\Toolkits\Parallax\Channel\Message;
 
+use NXS_PARALLAX_STUB;
 
 #pull channels out of the env
 
 #attach to event manager
 
 #expose eventloop
-
-class BaseAgentClient implements IAgentAware
+/**
+ * Helps to facilitate Agent's directives to the job
+ */
+abstract class BaseAgentClient implements IAgentAware
 {
-	static $hInstance;
+	static $hAgentInstance;
+	static bool $bHasBeenConfigured = false;
 	private function __contruct()
 	{}
 
@@ -22,29 +28,33 @@ class BaseAgentClient implements IAgentAware
 	 */
 	static function getConfiguredInstance(): BaseAgentClient
 	{
-		if (self::$hInstance==null)
+		self::getInstance();
+		if (!self::$bHasBeenConfigured)
 		{
-			self::$hInstance=new self;
+			self::$hAgentInstance->setup();
+			self::$bHasBeenConfigured = true;
 		}
-		return self::$hInstance;
+		return self::$hAgentInstance;
 	}
+
+	static function getInstance(): BaseAgentClient
+	{
+		// NXS_PARALLAX_STUB\_L(print_r(get_defined_constants(true)['user'], true));
+		$sNamedAgent=sprintf('NxSys\Toolkits\Parallax\Job\AgentClient\%sAgentClient', PARALLAX_JOB_TYPE);
+
+		if (self::$hAgentInstance==null)
+		{
+			self::$hAgentInstance=new $sNamedAgent;
+		}
+		return self::$hAgentInstance;
+	}
+
+	abstract public function setup();
 
 	public function registerJob(array $aSettings)
 	{
 
 	}
-
-
-	public function setAgentInitializationRoutine(callable $hAgentCallback): void
-	{
-
-	}
-
-	protected function getAgentInitializationRoutine(): callable
-	{
-		# code...
-	}
-
 
 	public function getEvent(): Message
 	{
@@ -64,7 +74,7 @@ class BaseAgentClient implements IAgentAware
 	}
 	public function getSystemChannels(): array //Channel[]
 	{
-		
+
 	}
 
 
@@ -82,7 +92,7 @@ class BaseAgentClient implements IAgentAware
 
 	public function sendShutdownSignal(): bool
 	{
-			
+
 	}
 
 	public function sendHaltSignal(): bool

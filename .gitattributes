@@ -13,6 +13,7 @@ src-docs/apigen.neon -text
 src/Agent/BaseAgent.php -text
 src/Agent/IAgent.php -text
 src/Agent/ParallelAgent.php -text
+src/Agent/PlainAgent.php -text
 src/Agent/ProcessAgent.php -text
 src/Channel.php -text
 src/Channel/BaseChannel.php -text
@@ -23,6 +24,7 @@ src/Channel/IRpcChannel.php -text
 src/Channel/InMemoryChannel.php -text
 src/Channel/Message.php -text
 src/Channel/ParallaxChannel_InvalidParameterException.php -text
+src/Channel/ParallaxChannel_MessageSizeTooLargeException.php -text
 src/Channel/ParallelChannel.php -text
 src/Channel/StdPipeChannel.php -text
 src/Channel/XMLSocketChannel.php -text
@@ -37,6 +39,7 @@ src/Job/Coroutine.php -text
 src/Job/Defer.php -text
 src/Job/Fiber.php -text
 src/Job/IJob.php -text
+src/Job/PlainJob.php -text
 src/Job/Timer.php -text
 src/SampleJob.php -text
 src/Supervisor.php -text
@@ -47,6 +50,7 @@ src/WatchDog.php -text
 tests/ApiConformityTest.php -text
 tests/BasicTest.php -text
 tests/EnvironmentTest.php -text
+tests/IPCInMemTest.php -text
 tests/NewProcessTest.php -text
 tests/NewThreadTest.php -text
 tests/ThreadBootloaderTest.php -text

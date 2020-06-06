@@ -21,7 +21,7 @@ class ApiConformityTest extends \Codeception\Test\Unit
 
 		//pre init
 		$oJob->setVal(1);
-		$oAgent=new Agent\BaseAgent;
+		$oAgent=new Agent\PlainAgent;
 
 		//execute
 		$oAgent->run($oJob);

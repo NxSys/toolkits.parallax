@@ -74,7 +74,18 @@ class ProcessAgent extends BaseAgent
 		$this->setAgentId();
 		$this->setJobLogFileName();
 		$this->setAutoloaderPath();
+		$this->setAgentType();
 		(printf(">>>CHECKPOINT %s::%s:%s<<<\n", __CLASS__, __FUNCTION__, __LINE__));
+	}
+
+	/**
+	 * Sets the type name of the agent that will be loaded by BaseAgentClient in the job
+	 *
+	 * @return string Agent type
+	 */
+	public function setAgentType(): string
+	{
+		return $this->aJobEnv['PARALLAX_JOB_TYPE']='Process';
 	}
 
 	/**
@@ -91,7 +102,7 @@ class ProcessAgent extends BaseAgent
 	{
 		if($this->hProcessHost)
 		{
-			throw new Exception("You may not redeclare the autoloader after the stub has been executed.");
+			throw new \Exception("You may not redeclare the autoloader after the stub has been executed.");
 		}
 		// We're not going to check is_readable, on the off chance that the stub
 		//  can get to the file "better" then we can...
@@ -182,21 +193,22 @@ class ProcessAgent extends BaseAgent
 	 * 	4) Initialze Job
 	 * 	--4A)	Pass channel refer--
 	 *
+	 * Please, leave no blank lines!
 	 * @return string The code block
-	 * .
-	 * .
 	 **/
 	public function generateStubBlock(): string
 	{	$sCode = <<< 'CODEBLOCK'
-		<?php
-		namespace NXS_PARALLAX_STUB; use ReflectionClass;
+		<?php namespace NXS_PARALLAX_STUB;
+		use ReflectionClass;
 		//...debug setup
-		define('PARALLAX_JOB_DEBUG', getenv('PARALLAX_JOB_DEBUG'));
+		define('PARALLAX_JOB_TYPE', getenv('PARALLAX_JOB_TYPE') ?: 'Process');
+		define('PARALLAX_JOB_DEBUG', getenv('PARALLAX_JOB_DEBUG') ?: 0);
 		define('PARALLAX_JOB_LOGFILE', getenv('PARALLAX_JOB_LOGFILE')?: 'php://stderr');
-		function _L($m){error_log($ln=sprintf("[%s][%08d] %s\n", date('c'), getmypid(), $m), 3, PARALLAX_JOB_LOGFILE);print $ln;}
+		function _L($m){print $ln=sprintf("[%s][%08d] %s\n", date('c'), getmypid(), $m);error_log($ln, 3, PARALLAX_JOB_LOGFILE);}
 		//...startup
 		!PARALLAX_JOB_DEBUG ?: _L('Launching...');
-		!PARALLAX_JOB_DEBUG ?: _L(sprintf('Log: %s, Loader: %s, Job: %s', getenv('PARALLAX_JOB_LOGFILE'), getenv('PARALLAX_JOB_LOADERPATH'), getenv('PARALLAX_JOB_CLASS')));
+		!PARALLAX_JOB_DEBUG ?: _L(sprintf('Log: %s, Loader: %s, Job: %s, Type: %s', getenv('PARALLAX_JOB_LOGFILE'), getenv('PARALLAX_JOB_LOADERPATH'), getenv('PARALLAX_JOB_CLASS'), PARALLAX_JOB_TYPE));
+		//...private consts
 		const EMSG_NOLOADER='Job Launch Failure: Unable to read job loader ';
 		const EMSG_NOJOB='Job Launch Failure: Loader is unable to load job class ';
 		const EMSG_JOBEX='Job Launch Failure: Job failed with exception ';
@@ -229,6 +241,7 @@ class ProcessAgent extends BaseAgent
 		catch (Throwable $e)
 		{
 			//@todo: ex handling standard?
+			//@todo: implement fallback non-ex error handler?
 			_L(sprint('%s%s %s'.PHP_EOL, EMSG_JOBEX, get_class(), $e->getMessage()));
 			!PARALLAX_JOB_DEBUG ?: _L(print_r($e, true));
 			!PARALLAX_JOB_DEBUG ?: _L(print_r(getenv(), true));
@@ -281,13 +294,16 @@ class ProcessAgent extends BaseAgent
 			getcwd(),
 			array_merge($_ENV, $this->aJobEnv)
 		);
+		//@todo manage timeouts
+		$this->hProcessHost->setTimeout(null);
 		//start it up
 		codecept_debug('starting...');
 		codecept_debug($this->aJobEnv);
 		try
 		{
-			$this->hProcessHost->run();
+			$this->hProcessHost->mustRun();
 		}
+		// @todo ProcessTimedOutException?
 		catch (ProcessFailedException $ex)
 		{
 			codecept_debug('failed?');
@@ -300,7 +316,9 @@ class ProcessAgent extends BaseAgent
 		{
 			// REF: sfProc will store stdout and stderr at
 			// "%TEMP%\sf_proc_00.out" and "%TEMP%\sf_proc_00.err" respectively
-			throw new ParallaxRuntimeException_ProcessAgent_LaunchFailure('Process exited imediantly or did not launch successfully.');
+
+			//did it tho??
+			// throw new ParallaxRuntimeException_ProcessAgent_LaunchFailure('Process exited immediately or did not launch successfully.');
 		}
 
 		#@todo imediate check in required
@@ -316,8 +334,8 @@ class ProcessAgent extends BaseAgent
 
 		$this->loadStubProcess();
 		//channels are available now
-		$this->oInChannel->mergeEnv($this->aJobEnv);
-		$this->oInChannel->runJob($sJob, $aArguments);
+		// $this->oInChannel->mergeEnv($this->aJobEnv);
+		// $this->oInChannel->runJob($sJob, $aArguments);
 
 		// $oResult = $this->hThreadRuntime->run($this->cExecute, [$oJob, $this->oInData, $this->oOutData, $aArguments]);
 		(printf(">>>CHECKPOINT %s::%s:%s<<<\n", __CLASS__, __METHOD__, __LINE__));
