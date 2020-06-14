@@ -26,7 +26,7 @@ class IPCInMemTest extends \Codeception\Test\Unit
 		$oMemChannel=new IpcChannel\InMemoryChannel;
 		$this->assertInstanceOf('NxSys\Toolkits\Parallax\Channel\InMemoryChannel', $oMemChannel);
 
-		$sCRN='plx+shm:000148680000000054f849ab00000000648c43d8_I?k=0xABCD&s=65280&f=c&m=700';
+		$sCRN='urn:nxsys-ipcrn:shm:000148680000000054f849ab00000000648c43d8_I?SegmentSize=65280&SegmentFlag=c&SegmentMode=700&Key=ABCD';
 		$iErrorLevel=$oMemChannel->openChannelResourceName($sCRN);
 		$this->assertEquals(0, $iErrorLevel); //So we have an assertion.
 	}
@@ -42,7 +42,7 @@ class IPCInMemTest extends \Codeception\Test\Unit
 	{
 		$oMemChannel=new IpcChannel\InMemoryChannel;
 		$this->assertInstanceOf('NxSys\Toolkits\Parallax\Channel\InMemoryChannel', $oMemChannel);
-		$sCRN='plx+shm:000148680000000054f849ab00000000648c43d8_I?k=0xABCD&s=65280&f=c&m=700';
+		$sCRN='urn:nxsys-ipcrn:shm:000148680000000054f849ab00000000648c43d8_I?SegmentSize=65280&SegmentFlag=c&SegmentMode=700&Key=ABCD';
 		$iErrorLevel=$oMemChannel->openChannelResourceName($sCRN);
 		$this->assertEquals(0, $iErrorLevel); //So we have an assertion.
 		$oMsg=new Channel\Message;
@@ -58,7 +58,7 @@ class IPCInMemTest extends \Codeception\Test\Unit
 	public function testCanReceiveMessage()
 	{
 		$oMemChannel=new IpcChannel\InMemoryChannel;
-		$sCRN='plx+shm:000148680000000054f849ab00000000648c43d8_I?k=0xABCD&s=65280&f=c&m=700';
+		$sCRN='urn:nxsys-ipcrn:shm:000148680000000054f849ab00000000648c43d8_I?SegmentSize=65280&SegmentFlag=c&SegmentMode=700&Key=ABCD';
 		$oMemChannel->openChannelResourceName($sCRN);
 		$oMyMsg=new Channel\Message;
 		$iMsgLen=strlen(serialize($oMyMsg));
@@ -71,7 +71,7 @@ class IPCInMemTest extends \Codeception\Test\Unit
 	public function testReceveValidMessageContent()
 	{
 		$oMemChannel=new IpcChannel\InMemoryChannel;
-		$sCRN='plx+shm:000148680000000054f849ab00000000648c43d8_I?k=0xABCD&s=65280&f=c&m=700';
+		$sCRN='urn:nxsys-ipcrn:shm:000148680000000054f849ab00000000648c43d8_I?SegmentSize=65280&SegmentFlag=c&SegmentMode=700&Key=ABCD';
 		$oMemChannel->openChannelResourceName($sCRN);
 		$oMyMsg=new Channel\Message;
 		$sTestValue='ATESTVALUE';
@@ -91,7 +91,7 @@ class IPCInMemTest extends \Codeception\Test\Unit
 	public function testReusableChannel()
 	{
 		$oMemChannel=new IpcChannel\InMemoryChannel;
-		$sCRN='plx+shm:000148680000000054f849ab00000000648c43d8_I?k=0xABCD&s=65280&f=c&m=700';
+		$sCRN='urn:nxsys-ipcrn:shm:000148680000000054f849ab00000000648c43d8_I?SegmentSize=65280&SegmentFlag=c&SegmentMode=700&Key=ABCD';
 		$oMemChannel->openChannelResourceName($sCRN);
 		$oMyMsg=new Channel\Message();
 		$sTestValue='ATESTVALUE';

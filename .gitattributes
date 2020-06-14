@@ -50,6 +50,7 @@ src/WatchDog.php -text
 tests/ApiConformityTest.php -text
 tests/BasicTest.php -text
 tests/EnvironmentTest.php -text
+tests/IPCGeneralTest.php -text
 tests/IPCInMemTest.php -text
 tests/NewProcessTest.php -text
 tests/NewThreadTest.php -text

@@ -38,6 +38,12 @@ use NxSys\Core\ExtensibleSystemClasses as CoreEsc;
 // use NxSys\Toolkits\Parallax\Channel\ParallaxChannel_InvalidParameterException;
 use RuntimeException;
 
+/**
+ * @var string URN ... for Channel Resource Name `urn:nxsys-ipcrn:<IPC_NSS:[name]:[CRID]>`
+ */
+const IPC_CRN_NID='nxsys-ipcrn';
+
+
 abstract class BaseChannel implements IChannel
 {
 	/** @var string $sId Global id for channel */
@@ -51,6 +57,10 @@ abstract class BaseChannel implements IChannel
 
 	/** @var bool $bIsThisChannelHosting Is this object responsible for allocating channel resources? */
 	protected $bIsThisChannelHosting;
+
+	const CRN_NID=IPC_CRN_NID;
+
+	//child class needs to set IPC_CRN_NSS;
 
 	/**
 	 * @* @param $sId string Id
@@ -76,7 +86,7 @@ abstract class BaseChannel implements IChannel
 	{
 		if (!$this->sId)
 		{
-			throw new ParallaxChannel_InvalidParameterException('There is no id. Have you called ::startup()?');
+			throw new ParallaxChannel_InvalidParameterException('There is no id. Have you called ::startup() or ::setId()?');
 		}
 		return $this->sId;
 	}
@@ -85,9 +95,12 @@ abstract class BaseChannel implements IChannel
 	{
 		// <driver>:<channelId>?<opts>
 		$sCRNfmt='%s:%s?%s';
+		ksort($this->aConfig);
 		$sCRNData=http_build_query($this->aConfig);
 		// $this->shutdown(); why should this have side effects
-		return sprintf($sCRNfmt, get_class(), $this->getId(), $sCRNData);
+		return sprintf($sCRNfmt,
+					sprintf('urn:%s:%s', self::CRN_NID, $this::CRN_NSS),
+						$this->getId(), $sCRNData);
 	}
 
 	public function openChannelResourceName(/*string*/ $sCRN)

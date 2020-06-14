@@ -25,7 +25,7 @@ class SampleJob extends BaseJob
 		$oAgentClient=Job\AgentClient\BaseAgentClient::getConfiguredInstance();
 
 		//do work!
-		`start notepad`;
+		`start cmd /c ping 127.1`;
 		return $this->v;
 	}
 }

@@ -169,7 +169,7 @@ class ProcessAgent extends BaseAgent
 		}
 		$this->oOutChannel=$oChannel?:new $this->getChannelType();
 		#is this supported??
-		$this->oInChannel->setId($this->getAgentId().'_O');
+		$this->oOutChannel->setId($this->getAgentId().'_O');
 	}
 
 	public function getInChannel(): Parallax\Channel\IChannel
@@ -304,11 +304,11 @@ class ProcessAgent extends BaseAgent
 			$this->hProcessHost->mustRun();
 		}
 		// @todo ProcessTimedOutException?
-		catch (ProcessFailedException $ex)
+		catch (sfProcess\Exception\ProcessFailedException $ex)
 		{
 			codecept_debug('failed?');
 
-			throw new ParallaxRuntimeException_ProcessAgent_LaunchFailure('Process did not launch successfully. Internal exception', $ex);
+			throw new ParallaxRuntimeException_ProcessAgent_LaunchFailure('Process did not launch successfully. Internal process exception: ', 0, $ex);
 		}
 
 		//it should be waiting....

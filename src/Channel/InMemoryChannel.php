@@ -10,12 +10,18 @@ use InvalidArgumentException;
 use LengthException;
 use NxSys\Toolkits\Parallax;
 use NxSys\Toolkits\Parallax\Agent\ParallaxRuntimeException_ProcessAgent_LaunchFailure;
-use ParallaxChannel_InvalidParameterException;
+// use ParallaxChannel_InvalidParameterException;
 
 const INMEM_DEFAULT_SEGMENT_DATA_OFFSET=256;
 const INMEM_DEFAULT_SEGMENT_SIZE=(INMEM_DEFAULT_SEGMENT_DATA_OFFSET-1)+65280;
-const INMEM_DEFAULT_SEGMENT_FLAG='w';
+const INMEM_DEFAULT_SEGMENT_FLAG='c';
 const INMEM_DEFAULT_SEGMENT_MODE='0700';
+
+/**
+ * @var string URN ... for Channel Resource Name `urn:[INMEM_CRN_NS]:<CRID>`
+ * @link https://www.php.net/manual/en/function.shmop-open.php#refsect1-function.shmop-open-parameters
+ */
+const INMEM_CRN_NSS='shm';
 
 /**
  *
@@ -27,6 +33,9 @@ class InMemoryChannel extends BaseChannel implements IChannel
 	const DEFAULT_SEGMENT_SIZE=INMEM_DEFAULT_SEGMENT_SIZE;
 	const DEFAULT_SEGMENT_FLAG=INMEM_DEFAULT_SEGMENT_FLAG;
 	const DEFAULT_SEGMENT_MODE=INMEM_DEFAULT_SEGMENT_MODE;
+
+	const CRN_NSS=INMEM_CRN_NSS;
+
 
 	/** @var resource $hSegment Handle to Memory Segment */
 	protected $hSegment = null;
@@ -107,40 +116,70 @@ class InMemoryChannel extends BaseChannel implements IChannel
 		}
 		// list($iKey, $sSegmentFlag, $iSegmentMode, $iSegmentSize) = $this->aConfig;
 
-		$this->aConfig = array_combine(["SegmentSize", "SegmentFlag", "SegmentMode"], $aArgs);
+		if (!count($aArgs) == 0)
+		{
+			if (count($aArgs) == 3)
+			{
+				$this->aConfig = array_combine(["SegmentFlag", "SegmentMode", "SegmentSize"], $aArgs);
+			}
+			else
+			{
+				throw new ParallaxChannel_InvalidParameterException("Must specify all required parameters when not using defaults. You Specified "
+					.implode(", ", $aArgs)
+				);
+			}
+		}
+		#@todo what if combine is false?
 		$this->aConfig["Key"] = $iKey;
 		$this->prepareConfigOptions();
 		// codecept_debug($this->aConfig);
-		// codecept_debug(var_export($this->aConfig["SegmentSize"], true));
-		$this->hSegment=shmop_open($this->aConfig["Key"],
-								   $this->aConfig["SegmentFlag"],
-								   $this->aConfig["SegmentMode"],
-								   INMEM_DEFAULT_SEGMENT_DATA_OFFSET+$this->aConfig["SegmentSize"]
-								);
+		codecept_debug(var_export($this->aConfig["SegmentSize"], true));
+		codecept_debug(var_export((INMEM_DEFAULT_SEGMENT_DATA_OFFSET+$this->aConfig["SegmentSize"]), true));
+		try
+		{
+			$this->hSegment=shmop_open($this->aConfig["Key"],
+									   $this->aConfig["SegmentFlag"],
+									   $this->aConfig["SegmentMode"],
+									   (INMEM_DEFAULT_SEGMENT_DATA_OFFSET+$this->aConfig["SegmentSize"])
+									);
+			//code...
+		}
+		catch (\Throwable $th)
+		{
+			var_dump($th->getMessage());
+			debug_print_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS);
+			var_dump($this->aConfig["Key"],
+			$this->aConfig["SegmentFlag"],
+			$this->aConfig["SegmentMode"],
+			(INMEM_DEFAULT_SEGMENT_DATA_OFFSET+$this->aConfig["SegmentSize"]));
+			//throw $th;
+			die;
+		}
+		return;
 	}
 
 
 	protected function prepareConfigOptions(): bool
 	{
-		if ($this->aConfig["SegmentSize"] == null)
+		if (!isset($this->aConfig["SegmentSize"]) || $this->aConfig["SegmentSize"] == null)
 		{
 			$this->aConfig["SegmentSize"] = INMEM_DEFAULT_SEGMENT_SIZE;
 		}
-		if (is_string($this->aConfig["SegmentSize"]))
+		if (!isset($this->aConfig["SegmentSize"]) || is_string($this->aConfig["SegmentSize"]))
 		{
 			$this->aConfig["SegmentSize"] = (int) $this->aConfig["SegmentSize"];
 		}
 
 
-		if ($this->aConfig["SegmentFlag"] == null)
+		if (!isset($this->aConfig["SegmentFlag"]) || $this->aConfig["SegmentFlag"] == null)
 		{
 			$this->aConfig["SegmentFlag"] = INMEM_DEFAULT_SEGMENT_FLAG;
 		}
-		if ($this->aConfig["SegmentMode"] == null)
+		if (!isset($this->aConfig["SegmentMode"]) || $this->aConfig["SegmentMode"] == null)
 		{
 			$this->aConfig["SegmentMode"] = INMEM_DEFAULT_SEGMENT_MODE;
 		}
-		if (is_string($this->aConfig["SegmentMode"]))
+		if (!isset($this->aConfig["SegmentMode"]) || is_string($this->aConfig["SegmentMode"]))
 		{
 			$this->aConfig["SegmentMode"] = (int) $this->aConfig["SegmentMode"];
 		}
@@ -160,19 +199,22 @@ class InMemoryChannel extends BaseChannel implements IChannel
 	 */
 	protected function startup(array $aCRN)
 	{
-		codecept_debug($aCRN);
-		if ($this->sId && $this->getId()!=$aCRN['path'])
+		// codecept_debug($aCRN);
+		//gets the CID from the CRN NSS
+		$sId=substr(strrchr($aCRN['path'], ':'), 1);
+		if ($this->sId && $this->getId()!=$sId)
 		{
-			throw new ParallaxChannel_InvalidParameterException($aCRN['path'].' is invalid');
+			throw new ParallaxChannel_InvalidParameterException($sId.' is invalid');
 		}
-		$this->setId($aCRN['path']);
-
+		$this->setId($sId);
+		// Key=1119585660124926041&SegmentSize=65535&SegmentFlag=c&SegmentMode=700
 		// parse_str($aCRN['query'], $this->aConfig);
 		parse_str($aCRN['query'], $this->aConfig);
 		codecept_debug($this->aConfig);
+		// urn:nxsys-ipcrn:shm:100?Key=1119585660124926041&SegmentSize=65535&SegmentFlag=c&SegmentMode=700
 
-		//check query order?
-		unset($this->aConfig['k']); //see
+		ksort($this->aConfig);
+		unset($this->aConfig['Key']); //see
 		$this->open(...array_values($this->aConfig));
 
 		#new func?
